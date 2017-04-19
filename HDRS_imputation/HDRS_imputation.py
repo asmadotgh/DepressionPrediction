@@ -24,9 +24,6 @@ def one_hot_id(series):
     return series
 
 df = input_df[input_df['HAMD'] >= 0]
-df = df[df['total_PA'] >= 0]
-df = df[df['total_NA'] >= 0]
-df['NA/PA'] = df['total_NA']/df['total_PA']
 
 df = df.apply(one_hot_id, axis=1)
 # df = df.dropna()
@@ -64,7 +61,7 @@ def create_PANAS_overall():
     return x1
 
 def create_PANAS_ratio():
-    x1 = np.array(df[['NA/PA']])
+    x1 = np.array(df[['total_NA/PA']])
     return x1
 
 y = np.array(df['HAMD']).reshape(-1,1)

@@ -9,8 +9,8 @@ from my_constants import *
 #####################################################################################
 def create_PANAS_dataset(group, ID):
     df = pd.read_csv(survey_dir+ID+'.csv')
-    df = df [df['Form'] != 'Settings']
-    df = df [df['Form'] != 'Audio recording']
+    df = df[df['Form'] != 'Settings']
+    df = df[df['Form'] != 'Audio recording']
     df['ID'] = ID
     df['group'] = group
     def calc_total_affect_score(series):
@@ -161,7 +161,7 @@ daily_df = daily_df.apply(calc_total_affect, axis=1)
 daily_df = daily_df.reset_index(drop=True)
 
 
-daily_df.to_csv(data_dir+'daily_survey.csv')
+daily_df.to_csv(feature_dir+'daily_survey.csv')
 
 
 
