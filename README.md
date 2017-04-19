@@ -1,4 +1,4 @@
-# Predicting Hamilton Depression Rating Scale from passive sensor data
+# Predicting Hamilton Depression Rating Scale (HDRS) from passive sensor data
 
 ## Steps
 ### Preprocessing and Feature generation
