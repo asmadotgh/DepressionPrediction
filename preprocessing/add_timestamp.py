@@ -33,4 +33,4 @@ def add_timestamp():
 
 
 # UNCOMMENT this line to add timestamp to location and create the Loc_edited.csv files
-add_timestamp()
+# add_timestamp()

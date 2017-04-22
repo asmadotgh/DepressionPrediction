@@ -10,5 +10,9 @@ feature_dir = data_dir + 'features/'
 raw_log_dir = data_dir + 'raw_logs/'
 combined_log_dir = data_dir + 'combined_logs/'
 
+ACC_THRESHOLD = 1000 # radius accuracy in meters for location data
 
+def date_index2str(series):
+    series['date'] = series['datetime'].strftime('%Y-%m-%d')
+    return series
 #sensor_data_dir='sleep_sensor_data/'
