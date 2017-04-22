@@ -84,8 +84,8 @@ def calculate_daily_call(intervals):
 df_daily = calculate_daily_call(intervals)
 df_daily = df_daily.sort(['ID', 'date']).reset_index(drop=True)
 
-df_daily['daily_incoming_outgoing_duration'] = df_daily['daily_Incoming_sum_call_duration']/df_daily['daily_Outgoing_sum_call_duration']
-df_daily['daily_incoming_outgoing_count'] = df_daily['daily_Incoming_count_call']/df_daily['daily_Outgoing_count_call']
+df_daily['daily_incoming_outgoing_call_duration'] = df_daily['daily_Incoming_sum_call_duration']/df_daily['daily_Outgoing_sum_call_duration']
+df_daily['daily_incoming_outgoing_call_count'] = df_daily['daily_Incoming_count_call']/df_daily['daily_Outgoing_count_call']
 
 
 cols = df_daily.columns.tolist()
