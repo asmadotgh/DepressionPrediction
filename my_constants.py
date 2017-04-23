@@ -1,3 +1,4 @@
+
 HC = ['M001','M002', 'M014', 'M021']
 MDD = ['M004', 'M005', 'M006', 'M008', 'M011', 'M012', 'M013', 'M015', 'M016', 'M017', 'M020', 'M022']
 outliers = ['M007', 'M018', 'M023'] #dropped out. any user that needs to be removed. for example is in the HAMD scores but doesn't have data or vice versa
@@ -16,6 +17,8 @@ CALL_TYPES = ['Incoming',  'IncomingMissed',  'IncomingDismissed',
 SMS_TYPES = ['Incoming', 'Outgoing']
 APP_TYPES = ['game', 'email', 'web', 'calendar', 'communication', 'facebook',
              'maps', 'youtube', 'photo', 'shopping', 'clock']
+
+STATIONARY_SPEED = 0.3
 
 def get_app_type(app):
     if app in ['air.com.sgn.bookoflife.gp']:
@@ -50,3 +53,5 @@ def date_index2str(series):
     series['date'] = series['datetime'].strftime('%Y-%m-%d')
     return series
 #sensor_data_dir='sleep_sensor_data/'
+
+
