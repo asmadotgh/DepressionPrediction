@@ -53,6 +53,7 @@ def calculate_daily_location(intervals):
                 user_df[intrvl_name+'_long_mean'] = np.nan
                 user_df[intrvl_name+'_long_median'] = np.nan
                 user_df[intrvl_name+'_count'] = np.nan
+                user_df[intrvl_name+'_total_std'] = np.nan
             if len(user_df) == 0:
                 user_df = user_df.append(df_agg, ignore_index=True)
             else:
