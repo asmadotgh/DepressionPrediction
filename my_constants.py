@@ -14,6 +14,32 @@ ACC_THRESHOLD = 1000 # radius accuracy in meters for location data
 CALL_TYPES = ['Incoming',  'IncomingMissed',  'IncomingDismissed',
               'Outgoing', 'OugtoingNotReached']
 SMS_TYPES = ['Incoming', 'Outgoing']
+APP_TYPES = ['game', 'email', 'web', 'calendar', 'communication', 'facebook',
+             'maps', 'youtube', 'photo', 'shopping', 'clock']
+
+def get_app_type(app):
+    if app in ['air.com.sgn.bookoflife.gp']:
+        return 'game'
+    if app in ['com.android.email', 'com.yahoo.mobile.client.android.mail']:
+        return 'email'
+    if app in ['com.android.chrome', 'com.sec.android.app.sbrowser']:
+        return 'web'
+    if app in ['com.android.calendar']:
+        return 'calendar'
+    if app in ['com.android.contacts', 'com.android.incallui', 'com.android.mms', 'com.android.phone', 'com.whatsapp']:
+        return 'communication'
+    if app in ['com.facebook.katana', 'com.facebook.orca']:
+        return 'facebook'
+    if app in ['com.google.android.apps.maps']:
+        return 'maps'
+    if app in ['com.google.android.youtube']:
+        return 'youtube'
+    if app in ['com.sec.android.app.camera', 'com.sec.android.gallery3d', 'com.sec.android.mimage.photoretouching']:
+        return 'photo'
+    if app in ['com.walmart.android', 'com.target.ui', 'com.macys.android']:
+        return 'shopping'
+    if app in ['com.sec.android.app.clockpackage']:
+        return 'clock'
 
 #intervals used for calculating features in different time bins
 intervals = [[0, 3, '0_to_3'], [3, 6, '3_to_6'], [6, 9, '6_to_9'], [9, 12, '9_to_12'],
