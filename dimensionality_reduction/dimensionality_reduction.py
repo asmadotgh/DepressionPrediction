@@ -48,7 +48,6 @@ def convert_one_hot_str(df, col):
 
         df[col+'_'+c] = new_col
 
-    del df[col]
     return df
 
 def plot_reduced_feature(x, ttl):
@@ -73,10 +72,9 @@ def preprocess_survey_x_y():
     df = HAMD[HAMD['group']=='MDD']
 
     df = df.reset_index(drop = True)
-    y_df = df[['ID', 'HAMD']]
 
     # drop timestamp information and labels
-    x_df = df.drop(['date','Name','PSS','group', 'HAMD',
+    all_df = df.drop(['date','Name','PSS','group',
                     'morning_trigger_time','beverages_trigger_time','medication_trigger_time',
                     'feeling1_trigger_time','feeling2_trigger_time','evening_trigger_time',
                    'morning_missing', 'beverages_missing', 'medication_missing',
@@ -86,27 +84,29 @@ def preprocess_survey_x_y():
                    'sleepLog'], inplace=False, axis=1)
 
     # drop detailed alc and caffeine, we believe total consumption suffices
-    x_df.drop(['beverage_1','beverage_2','beverage_3','beverage_4','beverage_5',
+    all_df.drop(['beverage_1','beverage_2','beverage_3','beverage_4','beverage_5',
                     'beverage_6','beverage_7','beverage_8','beerAmount','wineAmount',
                     'spiritsAmount','ciderAmount','coffeeAmount','teaAmount',
                     'sodaAmount','energyAmount'], inplace=True, axis=1)
 
     # transform categorical data to one-hot representation
-    x_df = convert_yn(x_df, y_old=1, n_old=2, y_new=1, n_new=0, col='fruits')
-    x_df = convert_yn(x_df, y_old=1, n_old=2, y_new=1, n_new=0, col='supplements')
-    x_df = convert_yn(x_df, y_old=1, n_old=2, y_new=1, n_new=0, col='nap')
-    x_df = convert_yn(x_df, y_old=1, n_old=2, y_new=1, n_new=0, col='joyfulEvent')
-    x_df = convert_yn(x_df, y_old=1, n_old=2, y_new=1, n_new=0, col='stressfulEvent')
-    x_df = convert_yn(x_df, y_old=1, n_old=2, y_new=1, n_new=0, col='meditation')
+    all_df = convert_yn(all_df, y_old=1, n_old=2, y_new=1, n_new=0, col='fruits')
+    all_df = convert_yn(all_df, y_old=1, n_old=2, y_new=1, n_new=0, col='supplements')
+    all_df = convert_yn(all_df, y_old=1, n_old=2, y_new=1, n_new=0, col='nap')
+    all_df = convert_yn(all_df, y_old=1, n_old=2, y_new=1, n_new=0, col='joyfulEvent')
+    all_df = convert_yn(all_df, y_old=1, n_old=2, y_new=1, n_new=0, col='stressfulEvent')
+    all_df = convert_yn(all_df, y_old=1, n_old=2, y_new=1, n_new=0, col='meditation')
 
-    x_df = convert_one_hot(x_df, min_val=1, max_val=4, col='middaySocial1')
-    x_df = convert_one_hot(x_df, min_val=1, max_val=4, col='middaySocial2')
-    x_df = convert_one_hot(x_df, min_val=1, max_val=3, col='appetiteChange')
-    x_df = convert_one_hot(x_df, min_val=0, max_val=6, col='weekday')
+    all_df = convert_one_hot(all_df, min_val=1, max_val=4, col='middaySocial1')
+    all_df = convert_one_hot(all_df, min_val=1, max_val=4, col='middaySocial2')
+    all_df = convert_one_hot(all_df, min_val=1, max_val=3, col='appetiteChange')
+    all_df = convert_one_hot(all_df, min_val=0, max_val=6, col='weekday')
 
-    x_df = convert_one_hot_str(x_df, col='ID')
+    all_df = convert_one_hot_str(all_df, col='ID')
+    x_df = all_df.drop(['ID','HAMD'], inplace=False, axis=1)
+    y_df = all_df[['ID', 'HAMD']]
 
-    return x_df, y_df
+    return all_df, x_df, y_df
 
 def reduce_dimensionality(df, pca_n, kernel_pca_n, truncated_svd_n):
     x_df = df

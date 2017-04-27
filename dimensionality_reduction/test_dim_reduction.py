@@ -1,7 +1,7 @@
 import numpy as np
 from dimensionality_reduction import *
 
-x_df, y_df = preprocess_survey_x_y()
+all_df, x_df, y_df = preprocess_survey_x_y()
 x_df_nonan = x_df.fillna(0)
 reduced_x_df = reduce_dimensionality(x_df_nonan, pca_n=2, kernel_pca_n=2, truncated_svd_n=2)
 
