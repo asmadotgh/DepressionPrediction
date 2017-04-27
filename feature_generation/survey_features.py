@@ -161,7 +161,7 @@ daily_df = daily_df.apply(calc_total_affect, axis=1)
 daily_df = daily_df.reset_index(drop=True)
 
 
-daily_df.to_csv(feature_dir+'daily_survey.csv')
+daily_df.to_csv(feature_dir+'daily_survey.csv', index=False)
 
 
 
@@ -248,4 +248,4 @@ HAMD = HAMD.sort(['ID', 'day']).reset_index(drop=True)
 for outlier in outliers:
     HAMD = HAMD[HAMD['ID'] != outlier]
 
-HAMD.to_csv(data_dir+'daily_survey_HAMD.csv')
+HAMD.to_csv(data_dir+'daily_survey_HAMD.csv', index=False)
