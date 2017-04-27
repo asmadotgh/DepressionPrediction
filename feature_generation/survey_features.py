@@ -73,10 +73,10 @@ def calc_total_affect(series):
     return series
 
 def calc_total_beverage(series):
-    series['total_alc']=(BEER_ALC*series['beerAmount'] + WINE_ALC*series['wineAmount']+\
+    series['total_alc'] = (BEER_ALC*series['beerAmount'] + WINE_ALC*series['wineAmount']+\
     SPIRITS_ALC*series['spiritsAmount'] + CIDER_ALC*series['ciderAmount'])/ALC_CONVERTOR
 
-    series['total_caffeine']=(COFFEE_CAFFEINE*series['coffeeAmount'] + TEA_CAFFEINE*series['teaAmount']+\
+    series['total_caffeine'] = (COFFEE_CAFFEINE*series['coffeeAmount'] + TEA_CAFFEINE*series['teaAmount']+\
     SODA_CAFFEINE*series['sodaAmount'] + ENERGY_CAFFEINE*series['energyAmount'])
     return series
 
@@ -94,6 +94,11 @@ beverages_df = beverages_df[['ID', 'group', 'Trigger_date', 'form_duration', 'Tr
                              'beverage_8', 'beerAmount', 'beerT', 'wineAmount', 'wineT','spiritsAmount', 'spiritsT',\
                              'ciderAmount', 'ciderT', 'coffeeAmount', 'coffeeT','teaAmount', 'teaT', 'sodaAmount', 'sodaT',\
                              'energyAmount', 'energyT']]
+beverages_df[['beerAmount', 'wineAmount', 'spiritsAmount', 'ciderAmount',
+              'coffeeAmount', 'teaAmount', 'sodaAmount', 'energyAmount']] =\
+    beverages_df[['beerAmount', 'wineAmount', 'spiritsAmount', 'ciderAmount',
+                  'coffeeAmount', 'teaAmount', 'sodaAmount', 'energyAmount']]\
+        .fillna(0)
 beverages_df = beverages_df.apply(calc_total_beverage, axis=1)
 beverages_df = beverages_df.rename(columns={'form_duration': 'beverages_form_duration',
                                            'Missing': 'beverages_missing',
