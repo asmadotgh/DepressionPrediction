@@ -111,6 +111,7 @@ def preprocess_survey_x_y():
 def reduce_dimensionality(df, pca_n, kernel_pca_n, truncated_svd_n):
     x_df = df
     x = np.array(x_df)
+    x = (x - np.mean(x, 0))/np.std(x, 0)
 
     #PCA
     pca = PCA(n_components=pca_n)
