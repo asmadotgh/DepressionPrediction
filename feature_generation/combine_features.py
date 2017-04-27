@@ -17,6 +17,6 @@ def combine_features():
             all_features_df = all_features_df.append(feature_df, ignore_index=True)
         else:
             all_features_df = all_features_df.merge(feature_df, on=['date', 'ID'], how='outer')
-    all_features_df.to_csv(feature_dir+'daily_all.csv')
+    all_features_df.to_csv(feature_dir+'daily_all.csv', index=False)
 
 combine_features()
