@@ -7,9 +7,12 @@ from my_constants import *
 def combine_features():
     all_features_df = pd.DataFrame()
     for fname in os.listdir(feature_dir):
-        if fname.startswith('.'):
+        if fname.startswith('.') or fname == 'daily_all.csv':
             continue
+        feature = fname[fname.find('_')+1:-4]
         feature_df = pd.read_csv(feature_dir+fname)
+        feature_df.columns = [feature+'_'+col for col in feature_df.columns.values]
+        feature_df = feature_df.rename(columns={feature+'_date': 'date', feature+'_ID': 'ID'})
         if len(all_features_df)==0:
             all_features_df = all_features_df.append(feature_df, ignore_index=True)
         else:
