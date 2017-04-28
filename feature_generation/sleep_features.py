@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from my_constants import *
 
 def update_date(series):
