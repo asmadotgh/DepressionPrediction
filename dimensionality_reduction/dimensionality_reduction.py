@@ -68,9 +68,7 @@ def plot_reduced_feature(x, ttl):
 
 def preprocess_survey_x_y():
     HAMD = pd.read_csv(data_dir+'daily_survey_HAMD.csv')
-
     df = HAMD[HAMD['group']=='MDD']
-
     df = df.reset_index(drop = True)
 
     # drop timestamp information and labels
