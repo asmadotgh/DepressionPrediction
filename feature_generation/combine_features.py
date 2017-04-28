@@ -7,7 +7,7 @@ from my_constants import *
 def combine_features():
     all_features_df = pd.DataFrame()
     for fname in os.listdir(feature_dir):
-        if fname.startswith('.') or fname == 'daily_all.csv':
+        if fname.startswith('.') or fname == 'daily_all.csv' or fname == 'daily_survey.csv':
             continue
         feature = fname[fname.find('_')+1:-4]
         feature_df = pd.read_csv(feature_dir+fname)
