@@ -3,12 +3,12 @@ from dimensionality_reduction import *
 
 all_df, x_df, y_df = preprocess_survey_x_y()
 x_df_nonan = x_df.fillna(0)
-reduced_x_df = reduce_dimensionality(x_df_nonan, pca_n=2, kernel_pca_n=2, truncated_svd_n=2)
+reduced_x_df, reduced_n = reduce_dimensionality(x_df_nonan, max_n=50, threshold=EXPLAINED_VARIANCE_THRESHOLD)
 
 y = np.array(y_df['HAMD'])
-x1 = np.array(reduced_x_df[['PCA_0', 'PCA_1']])
-x2 = np.array(reduced_x_df[['KernelPCA_0', 'KernelPCA_1']])
-x3 = np.array(reduced_x_df[['TruncatedSVD_0', 'TruncatedSVD_1']])
+x1 = np.array(reduced_x_df[['PCA_'+str(i) for i in range(reduced_n)]])
+x2 = np.array(reduced_x_df[['KernelPCA_'+str(i) for i in range(reduced_n)]])
+x3 = np.array(reduced_x_df[['TruncatedSVD_'+str(i) for i in range(reduced_n)]])
 
 
 print np.shape(y)

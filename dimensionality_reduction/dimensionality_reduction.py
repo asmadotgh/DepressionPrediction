@@ -106,7 +106,7 @@ def preprocess_survey_x_y():
 
     return all_df, x_df, y_df
 
-def reduce_dimensionality(df, pca_n, kernel_pca_n, truncated_svd_n):
+def reduce_dimensionality(df, max_n, threshold):
     remove_col = []
     for i in range(len(df.columns.values)):
         if np.std(df[df.columns[i]])==0:
@@ -116,24 +116,36 @@ def reduce_dimensionality(df, pca_n, kernel_pca_n, truncated_svd_n):
     x = (x - np.mean(x, 0))/np.std(x, 0)
 
     #PCA
-    pca = PCA(n_components=pca_n)
+    pca = PCA(n_components=max_n)
     x1 = pca.fit_transform(x)
-    for i in range(pca_n):
+    evr = np.cumsum(pca.explained_variance_ratio_)
+
+    #choose optimal number of components
+    optimal_n_lst = [ind for ind, val in enumerate(evr) if val>=threshold]
+    if len(optimal_n_lst)==0:
+        optimal_n = max_n
+    else:
+        optimal_n = optimal_n_lst[0]
+    print 'optimal n: '+str(optimal_n)
+
+
+    for i in range(optimal_n):
         x_df['PCA_'+str(i)] = x1[:,i]
     print 'PCA explained variance: '+'{:.3f}'.format(np.sum(pca.explained_variance_ratio_))
 
     #KernelPCA
-    kernel_pca = KernelPCA(n_components=kernel_pca_n, kernel='rbf')
+    kernel_pca = KernelPCA(n_components=optimal_n, kernel='rbf')
     x2 = kernel_pca.fit_transform(x)
-    for i in range(kernel_pca_n):
+    for i in range(optimal_n):
         x_df['KernelPCA_'+str(i)] = x2[:,i]
-    # print 'Kernel PCA explained variance: '+'{:.3f}'.format(np.sum(kernel_pca.explained_variance_ratio_))
+    # print 'Kernel PCA explained variance: '+'{:.3f}'.format(kpca_explained_variance_ratio)
+
 
     #TruncatedSVD
-    truncated_svd = TruncatedSVD(n_components=truncated_svd_n)
+    truncated_svd = TruncatedSVD(n_components=optimal_n)
     x3 = truncated_svd.fit_transform(x)
-    for i in range(truncated_svd_n):
+    for i in range(optimal_n):
         x_df['TruncatedSVD_'+str(i)] = x3[:,i]
-    # print 'Truncated SVD explained variance: '+'{:.3f}'.format(np.sum(truncated_svd.explained_variance_ratio_))
+    print 'Truncated SVD explained variance: '+'{:.3f}'.format(np.sum(truncated_svd.explained_variance_ratio_))
 
-    return x_df
+    return x_df, optimal_n
