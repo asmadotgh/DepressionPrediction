@@ -109,7 +109,11 @@ def preprocess_survey_x_y():
     return all_df, x_df, y_df
 
 def reduce_dimensionality(df, pca_n, kernel_pca_n, truncated_svd_n):
-    x_df = df
+    remove_col = []
+    for i in range(len(df.columns.values)):
+        if np.std(df[df.columns[i]])==0:
+            remove_col.append(i)
+    x_df = df.drop(df.columns[remove_col], axis=1)
     x = np.array(x_df)
     x = (x - np.mean(x, 0))/np.std(x, 0)
 
@@ -118,17 +122,20 @@ def reduce_dimensionality(df, pca_n, kernel_pca_n, truncated_svd_n):
     x1 = pca.fit_transform(x)
     for i in range(pca_n):
         x_df['PCA_'+str(i)] = x1[:,i]
+    print 'PCA explained variance: '+'{:.3f}'.format(np.sum(pca.explained_variance_ratio_))
 
     #KernelPCA
     kernel_pca = KernelPCA(n_components=kernel_pca_n, kernel='rbf')
     x2 = kernel_pca.fit_transform(x)
     for i in range(kernel_pca_n):
         x_df['KernelPCA_'+str(i)] = x2[:,i]
+    # print 'Kernel PCA explained variance: '+'{:.3f}'.format(np.sum(kernel_pca.explained_variance_ratio_))
 
     #TruncatedSVD
     truncated_svd = TruncatedSVD(n_components=truncated_svd_n)
     x3 = truncated_svd.fit_transform(x)
     for i in range(truncated_svd_n):
         x_df['TruncatedSVD_'+str(i)] = x3[:,i]
+    # print 'Truncated SVD explained variance: '+'{:.3f}'.format(np.sum(truncated_svd.explained_variance_ratio_))
 
     return x_df
