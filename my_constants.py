@@ -20,6 +20,9 @@ APP_TYPES = ['game', 'email', 'web', 'calendar', 'communication', 'facebook',
 
 STATIONARY_SPEED = 0.3
 
+EXPLAINED_VARIANCE_THRESHOLD = 0.85
+
+REGULARIZATION_ALPHAS = [0.1, 0.5, 1.0, 5, 10.0]
 def get_app_type(app):
     if app in ['air.com.sgn.bookoflife.gp']:
         return 'game'
