@@ -242,6 +242,10 @@ def calc_avg_mood(series):
 
     series['avg_overall_PA'] = np.nanmean(user['total_PA'])
     series['avg_overall_NA'] = np.nanmean(user['total_NA'])
+    if not np.isnan(series['avg_overall_PA']):
+        series['avg_overall_NA/PA'] = series['avg_overall_NA']/series['avg_overall_PA']
+    else:
+        series['avg_overall_NA/PA'] = np.nan
 
     series['std_overall_PA'] = np.nanstd(user['total_PA'])
     series['std_overall_NA'] = np.nanstd(user['total_NA'])
