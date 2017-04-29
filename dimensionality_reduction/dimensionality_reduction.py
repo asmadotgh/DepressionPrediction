@@ -121,11 +121,13 @@ def reduce_dimensionality(df, max_n, threshold):
     evr = np.cumsum(pca.explained_variance_ratio_)
 
     #choose optimal number of components
+    # plt.scatter(range(max_n), evr)
+    # plt.show()
     optimal_n_lst = [ind for ind, val in enumerate(evr) if val>=threshold]
     if len(optimal_n_lst)==0:
         optimal_n = max_n
     else:
-        optimal_n = optimal_n_lst[0]
+        optimal_n = optimal_n_lst[0]+1
     print 'optimal n: '+str(optimal_n)
 
 
