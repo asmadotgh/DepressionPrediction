@@ -18,6 +18,8 @@ SMS_TYPES = ['Incoming', 'Outgoing']
 APP_TYPES = ['game', 'email', 'web', 'calendar', 'communication', 'facebook',
              'maps', 'youtube', 'photo', 'shopping', 'clock']
 
+SEED = 0
+
 STATIONARY_SPEED = 0.3
 
 EXPLAINED_VARIANCE_THRESHOLD = 0.85
