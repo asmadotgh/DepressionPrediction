@@ -9,7 +9,7 @@ from my_constants import *
 from dimensionality_reduction import preprocess_survey_x_y, reduce_dimensionality
 
 
-np.random.seed(0)
+np.random.seed(SEED)
 
 BEST_VALIDATION_RMSE = 1000
 BEST_X = None
@@ -68,6 +68,12 @@ def impute(inp_x, inp_y, ttl, mdl, ind_train, ind_test):
         regr = linear_model.LassoCV(alphas=REGULARIZATION_ALPHAS)
     elif mdl == 'elasticNet':
         regr = linear_model.ElasticNetCV(alphas=REGULARIZATION_ALPHAS)
+    elif mdl == 'theil':
+        regr = linear_model.TheilSenRegressor(random_state=SEED)
+    elif mdl == 'ransac':
+        regr = linear_model.RANSACRegressor(random_state=SEED)
+    elif mdl == 'huber':
+        regr = linear_model.HuberRegressor(random_state=SEED)
 
 
     inds = range(len(y))
@@ -77,7 +83,7 @@ def impute(inp_x, inp_y, ttl, mdl, ind_train, ind_test):
     avg_train_RMSE = 0
     avg_validation_RMSE = 0
     for tmp_train_inds, validation_inds in splits:
-        train_inds = list(tmp_train_inds)# + list(first_inds)
+        train_inds = list(tmp_train_inds)
         x_train = x[train_inds]
         y_train = y[train_inds]
         x_validation = x[validation_inds]
@@ -103,9 +109,9 @@ def impute(inp_x, inp_y, ttl, mdl, ind_train, ind_test):
         BEST_MDL = regr
         BEST_VALIDATION_RMSE = avg_validation_RMSE
 
-    print mdl+' '+ttl+' ,train RMSE:%f, validation RMSE: %f ' %(avg_train_RMSE, avg_validation_RMSE)
+    print mdl+', '+ttl+', train RMSE: %f, validation RMSE: %f ' %(avg_train_RMSE, avg_validation_RMSE)
 
-def impute_without_first_inds(x, y, ttl):
+def legacy_impute_without_first_inds(x, y, ttl):
     global first_inds
 
     # Create linear regression object
@@ -140,7 +146,7 @@ def impute_without_first_inds(x, y, ttl):
     print ttl+' ,train RMSE:%f, test RMSE: %f ' %(avg_train_RMSE, avg_test_RMSE)
 
 
-def impute_old(x, y, ttl):
+def legacy_impute(x, y, ttl):
     ind_train, x_train, y_train, ind_test, x_test, y_test = split_data(x, y)
 
     # Create linear regression object
@@ -180,11 +186,15 @@ def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_te
     plt.scatter(range(len(y)), y, label='HDRS', color='green', alpha=0.5)
     plt.scatter(ind_train, mdl.predict(np.array(x)[ind_train]), label='predicted HDRS - train', color='red', alpha=0.5)
     plt.scatter(ind_test, mdl.predict(np.array(x)[ind_test]), label='predicted HDRS - test', color='black', alpha=0.5)
-    plt.title('model: '+mdl_name+', dataset:'+ttl +
+    plt.title('model: '+mdl_name+', dataset: '+ttl +
               ', validation RMSE: '+'{:.3f}'.format(validation_RMSE)+
               ', test RMSE: '+'{:.3f}'.format(test_RMSE))
     plt.ylabel('HDRS')
     plt.legend(loc=2, scatterpoints=1)
+
+    print 'model parameters: \n'
+    print mdl.coef_
+
     plt.show()
 
 all_df, x_df, y_df = preprocess_survey_x_y()
@@ -203,7 +213,7 @@ PANAS_df = x_df_nonan[['avg_weekly_PA','avg_weekly_NA','avg_weekly_NA/PA',
                        'avg_overall_PA', 'avg_overall_NA','avg_overall_NA/PA',
                        'std_weekly_PA', 'std_weekly_NA',
                        'std_overall_PA', 'std_overall_NA']] #weekday, ID
-PANAS_df, PANAS_reduced_n = reduce_dimensionality(PANAS_df, max_n=3, threshold=EXPLAINED_VARIANCE_THRESHOLD)
+reduced_PANAS_df, PANAS_reduced_n = reduce_dimensionality(PANAS_df, max_n=5, threshold=EXPLAINED_VARIANCE_THRESHOLD)
 
 y = y_df[['HAMD']]#.reshape(-1,1)
 all_x = reduced_x_df
@@ -216,18 +226,24 @@ PANAS_short_weighted_weekly_x = PANAS_df[['weighted_avg_weekly_PA',
                        'weighted_avg_weekly_NA', 'weighted_avg_weekly_NA/PA']]
 PANAS_short_daily_x = PANAS_df[['total_PA', 'total_NA', 'total_NA/PA']]
 PANAS_x = PANAS_df
-PANAS_pca_x = PANAS_df[['PCA_'+str(i) for i in range(PANAS_reduced_n)]]
-PANAS_kernel_pca_x = PANAS_df[['KernelPCA_'+str(i) for i in range(PANAS_reduced_n)]]
-PANAS_truncated_svd_x = PANAS_df[['TruncatedSVD_'+str(i) for i in range(PANAS_reduced_n)]]
+PANAS_pca_x = reduced_PANAS_df[['PCA_'+str(i) for i in range(PANAS_reduced_n)]]
+PANAS_kernel_pca_x = reduced_PANAS_df[['KernelPCA_'+str(i) for i in range(PANAS_reduced_n)]]
+PANAS_truncated_svd_x = reduced_PANAS_df[['TruncatedSVD_'+str(i) for i in range(PANAS_reduced_n)]]
 
-
-ind_train, ind_test = split_data_ind(range(len(y)))
+# uncomment below for removing the first visits of each user
+inds = range(len(y))
+# for i in first_inds:
+#         inds.remove(i)
+ind_train, ind_test = split_data_ind(inds)
+# ind_train = list(ind_train) + list(first_inds)
 print '\ntrain indices:'
 print ind_train
 print '\ntest indices:'
 print ind_test
 
-models = ['regression', 'ridge', 'lasso', 'elasticNet']
+# TODO: add models that are robust to outlier
+# TODO: add hierarchical bayes
+models = ['regression', 'ridge', 'lasso', 'elasticNet', 'theil', 'ransac', 'huber']
 for mdl in models:
     impute(all_x, y, 'all data', mdl, ind_train, ind_test)
     impute(pca_x, y, 'PCA', mdl, ind_train, ind_test)
