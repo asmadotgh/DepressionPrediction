@@ -237,6 +237,15 @@ def calc_avg_mood(series):
     else:
         series['weighted_avg_weekly_NA/PA'] = np.nan
 
+    series['std_weekly_PA'] = np.nanstd(prev_week['total_PA'])
+    series['std_weekly_NA'] = np.nanstd(prev_week['total_NA'])
+
+    series['avg_overall_PA'] = np.nanmean(user['total_PA'])
+    series['avg_overall_NA'] = np.nanmean(user['total_NA'])
+
+    series['std_overall_PA'] = np.nanstd(user['total_PA'])
+    series['std_overall_NA'] = np.nanstd(user['total_NA'])
+
     return series
 
 HAMD = HAMD.apply(update_date_format, axis=1)
