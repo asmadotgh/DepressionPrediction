@@ -69,10 +69,10 @@ def plot_reduced_feature(x, ttl):
 def preprocess_survey_x_y():
     HAMD = pd.read_csv(data_dir+'daily_survey_HAMD.csv')
     df = HAMD[HAMD['group']=='MDD']
-    df = df.reset_index(drop = True)
+    df = df.reset_index(drop=True)
 
     # drop timestamp information and labels
-    all_df = df.drop(['date','Name','PSS','group',
+    all_df = df.drop(['Name','PSS','group',
                     'morning_trigger_time','beverages_trigger_time','medication_trigger_time',
                     'feeling1_trigger_time','feeling2_trigger_time','evening_trigger_time',
                    'morning_missing', 'beverages_missing', 'medication_missing',
@@ -101,7 +101,7 @@ def preprocess_survey_x_y():
     all_df = convert_one_hot(all_df, min_val=0, max_val=6, col='weekday')
 
     all_df = convert_one_hot_str(all_df, col='ID')
-    x_df = all_df.drop(['ID','HAMD'], inplace=False, axis=1)
+    x_df = all_df.drop(['ID','HAMD','date'], inplace=False, axis=1)
     y_df = all_df[['ID', 'HAMD']]
 
     return all_df, x_df, y_df
