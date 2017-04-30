@@ -190,7 +190,7 @@ PANAS_df = x_df_nonan[['avg_weekly_PA','avg_weekly_NA','avg_weekly_NA/PA',
 reduced_PANAS_df, PANAS_reduced_n = reduce_dimensionality(PANAS_df, max_n=5, threshold=EXPLAINED_VARIANCE_THRESHOLD)
 
 y = y_df[['HAMD']]#.reshape(-1,1)
-all_x = reduced_x_df
+all_x = x_df_nonan
 pca_x = reduced_x_df[['PCA_'+str(i) for i in range(reduced_n)]]
 kernel_pca_x = reduced_x_df[['KernelPCA_'+str(i) for i in range(reduced_n)]]
 truncated_svd_x = reduced_x_df[['TruncatedSVD_'+str(i) for i in range(reduced_n)]]
