@@ -3,4 +3,5 @@ data/*
 .idea/*
 .idea/.*
 .ipynb_checkpoints/*
-HDRS_imputation/model.txt
+HDRS_imputation/*.txt
+HDRS_prediction/*.txt
