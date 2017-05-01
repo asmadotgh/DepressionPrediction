@@ -29,9 +29,18 @@ def split_data_ind(inds, test_N):
 def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
 
     global BEST_VALIDATION_RMSE, BEST_X, BEST_Y, BEST_TTL, BEST_MDL_NAME, BEST_MDL
+    global X_MUE, X_STD, Y_MUE, Y_STD
 
     x = np.array(inp_x)[ind_train]
     y = np.array(inp_y)[ind_train]
+
+    X_MUE = np.mean(x, 0)
+    X_STD = np.std(x, 0)
+    Y_MUE = np.mean(y, 0)
+    Y_STD = np.std(y, 0)
+
+    x = (x - X_MUE)/X_STD
+    y = (y - Y_MUE)/Y_STD
 
     # Create linear regression object
     if mdl == 'regression':
@@ -48,8 +57,8 @@ def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
         regr = linear_model.RANSACRegressor(random_state=SEED, min_samples=0.2)
     elif mdl == 'huber':
         regr = linear_model.HuberRegressor(epsilon=2.0)
-    # elif mdl == 'gp':
-    #     regr = gaussian_process.GaussianProcessRegressor(n_restarts_optimizer=N_RESTARTS_OPTIMIZER, random_state=SEED)
+    elif mdl == 'gp':
+        regr = gaussian_process.GaussianProcessRegressor(n_restarts_optimizer=N_RESTARTS_OPTIMIZER, random_state=SEED)
 
     inds = range(len(y))
     kf = KFold(n_splits=K_FOLD_N)
@@ -66,8 +75,11 @@ def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
         # Train the model using the training sets
         regr.fit(x_train, y_train)
 
-        validation_RMSE = np.sqrt(mean_squared_error(y_validation, np.round(regr.predict(x_validation))))
-        train_RMSE = np.sqrt(mean_squared_error(y_train, np.round(regr.predict(x_train))))
+        validation_RMSE = np.sqrt(mean_squared_error(y_validation, regr.predict(x_validation)))
+        train_RMSE = np.sqrt(mean_squared_error(y_train, regr.predict(x_train)))
+
+        # validation_RMSE = np.sqrt(mean_squared_error(y_validation, np.round(regr.predict(x_validation))))
+        # train_RMSE = np.sqrt(mean_squared_error(y_train, np.round(regr.predict(x_train))))
 
         avg_train_RMSE += train_RMSE
         avg_validation_RMSE += validation_RMSE
@@ -88,14 +100,18 @@ def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
 
 
 def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_test, HAMD_file):
+    global X_MUE, X_STD, Y_MUE, Y_STD
+
     MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'.txt'
 
-    test_RMSE = np.sqrt(mean_squared_error(np.array(y)[ind_test], np.round(mdl.predict(np.array(x)[ind_test]))))
+    test_RMSE = np.sqrt(mean_squared_error(np.array(y)[ind_test], mdl.predict(np.array(x)[ind_test])))
+
+    # test_RMSE = np.sqrt(mean_squared_error(np.array(y)[ind_test], np.round(mdl.predict(np.array(x)[ind_test]))))
 
     plt.figure(figsize=(16, 4))
     plt.scatter(range(len(y)), y, label='HDRS', color='green', alpha=0.5)
-    plt.scatter(ind_train, np.round(mdl.predict(np.array(x)[ind_train])), label='predicted - train', color='red', alpha=0.5)
-    plt.scatter(ind_test, np.round(mdl.predict(np.array(x)[ind_test])), label='predicted - test', color='black', alpha=0.5)
+    plt.scatter(ind_train, mdl.predict(np.array(x)[ind_train])*Y_STD+Y_MUE, label='predicted - train', color='red', alpha=0.5)
+    plt.scatter(ind_test, mdl.predict(np.array(x)[ind_test])*Y_STD+Y_MUE, label='predicted - test', color='black', alpha=0.5)
     plt.title('imputation: '+ HAMD_file[0:-4]+', model: '+mdl_name+', dataset: '+ttl +
               ', validation RMSE: '+'{:.3f}'.format(validation_RMSE)+
               ', test RMSE: '+'{:.3f}'.format(test_RMSE))
@@ -134,7 +150,7 @@ def run_prediction(HAMD_file):
     x_df_nonan = x_df_nonan.drop(x_df_nonan.columns[remove_col], axis=1)
 
 
-    reduced_x_df, reduced_n = reduce_dimensionality(x_df_nonan, max_n=25, threshold=EXPLAINED_VARIANCE_THRESHOLD)
+    reduced_x_df, reduced_n = reduce_dimensionality(x_df_nonan, max_n=5, threshold=EXPLAINED_VARIANCE_THRESHOLD)
 
     y = y_df[['HAMD']]
     all_x = x_df_nonan
@@ -158,7 +174,7 @@ def run_prediction(HAMD_file):
     print '\ntest indices:'
     print ind_test
 
-    models = ['regression', 'ridge', 'lasso', 'elasticNet', 'huber']#, 'ransac', 'theil']
+    models = ['gp']#['regression', 'ridge', 'lasso', 'elasticNet', 'huber']#, 'ransac', 'theil']
     model_file = open(MODEL_FILE_NAME, "w")
     model_file.close()
     for mdl in models:
