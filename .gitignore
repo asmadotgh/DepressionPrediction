@@ -7,5 +7,7 @@ HDRS_imputation/*.txt
 HDRS_prediction/*.txt
 HDRS_prediction/figs
 HDRS_prediction/figs/*
-HDRS_prediction/LSTM:
+HDRS_prediction/LSTM
 HDRS_prediction/LSTM/*
+HDRS_prediction/LSTM_no_imputation
+HDRS_prediction/LSTM_no_imputation/*

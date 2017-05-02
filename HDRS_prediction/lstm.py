@@ -85,7 +85,7 @@ def predict(x_df, y_df, ttl):
     DATASET = 'MIMIC_BP'#'MIMIC_glucose'
     N = 1           # mini batch size
     T = 50          # time series length
-    niters = 50
+    niters = 20 #50
 
 
     dir_path = 'LSTM/'+ttl+'/'
@@ -97,6 +97,25 @@ def predict(x_df, y_df, ttl):
 
     train_x = np.reshape(np.array(x_df[0:9*N*T]), (9*N, T, -1))
     train_y = np.reshape(np.array(y_df[0:9*N*T]), (9*N, T, -1))
+
+    F = np.shape(train_x)[2]
+    S1 = np.shape(train_x)[0]
+    S2 = np.shape(train_x)[1]
+    EPSILON = 0.01
+
+    train_x_imp = train_x
+    train_y_imp = train_y
+    #TODO: impute train
+    for f in range(F):
+        noise = np.random.rand(S1, S2)*EPSILON
+        train_x_tmp = train_x
+        train_x_tmp[:,:,f] += noise
+        train_x_imp = np.concatenate((train_x_imp, train_x_tmp), axis=0)
+        train_y_imp = np.concatenate((train_y_imp, train_y), axis=0)
+
+    train_x = train_x_imp
+    train_y = train_y_imp
+
     train_dt = np.ones(np.shape(train_y))
 
     max_time_dist = np.max(train_dt)
@@ -111,6 +130,21 @@ def predict(x_df, y_df, ttl):
 
     vali_x = np.reshape(np.array(x_df[-2*N*T:-N*T]), (N, T, -1))
     vali_y = np.reshape(np.array(y_df[-2*N*T:-N*T]), (N, T, -1))
+
+    vali_x_imp = vali_x
+    vali_y_imp = vali_y
+
+    #TODO: impute validation
+    for f in range(F):
+        noise = np.random.rand(S1, S2)*EPSILON
+        vali_x_tmp = vali_x
+        vali_x_tmp[:,:,f] += noise
+        vali_x_imp = np.concatenate((vali_x_imp, vali_x_tmp), axis=0)
+        vali_y_imp = np.concatenate((vali_y_imp, vali_y), axis=0)
+
+    vali_x = vali_x_imp
+    vali_y = vali_y_imp
+
     vali_dt = np.ones(np.shape(vali_y))
 
     vali_x = np.clip((vali_x-mu)/std, -3, 3)
@@ -130,7 +164,7 @@ def predict(x_df, y_df, ttl):
 
     BEST_VALI_LOSS = np.nan
 
-    F = np.shape(train_x)[2]
+
     train_num_batches = np.shape(train_x)[0]/N
     vali_num_batches = np.shape(vali_x)[0]/N
     test_num_batches = np.shape(test_x)[0]/N
