@@ -43,22 +43,10 @@ def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
     y = (y - Y_MUE)/Y_STD
 
     # Create linear regression object
-    if mdl == 'regression':
-        regr = linear_model.LinearRegression()
-    elif mdl == 'ridge':
-        regr = linear_model.RidgeCV(cv=K_FOLD_N, alphas=REGULARIZATION_ALPHAS)
-    elif mdl == 'lasso':
-        regr = linear_model.LassoCV(cv=K_FOLD_N, alphas=REGULARIZATION_ALPHAS)
-    elif mdl == 'elasticNet':
-        regr = linear_model.ElasticNetCV(cv=K_FOLD_N, alphas=REGULARIZATION_ALPHAS)
-    elif mdl == 'theil':
-        regr = linear_model.TheilSenRegressor(random_state=SEED)
-    elif mdl == 'ransac':
-        regr = linear_model.RANSACRegressor(random_state=SEED, min_samples=0.2)
-    elif mdl == 'huber':
-        regr = linear_model.HuberRegressor(epsilon=2.0)
-    elif mdl == 'gp':
-        regr = gaussian_process.GaussianProcessRegressor(n_restarts_optimizer=N_RESTARTS_OPTIMIZER, random_state=SEED)
+    if 'gp' in mdl:
+        al = float(mdl[mdl.find('_a')+2:mdl.find('_n')])
+        n = int(mdl[mdl.find('_n')+1:])
+        regr = gaussian_process.GaussianProcessRegressor(alpha=al, n_restarts_optimizer=n, random_state=SEED)
 
     inds = range(len(y))
     kf = KFold(n_splits=K_FOLD_N)
@@ -175,6 +163,11 @@ def run_prediction(HAMD_file):
     print ind_test
 
     models = ['gp']#['regression', 'ridge', 'lasso', 'elasticNet', 'huber']#, 'ransac', 'theil']
+    alphas = [1e-10, 1e-8, 1e-6, 0.0001, 0.001, 0.01, 0.1, 0.5, 1.0]
+    n_restart_optimizers = [5, 10, 50, 100]
+    for al in alphas:
+        for n in n_restart_optimizers:
+            models.append('gp_a'+str(al)+'_n'+str(n))
     model_file = open(MODEL_FILE_NAME, "w")
     model_file.close()
     for mdl in models:
@@ -188,9 +181,10 @@ def run_prediction(HAMD_file):
     plot_prediction(BEST_X, BEST_Y, BEST_TTL, BEST_MDL_NAME, BEST_MDL, BEST_VALIDATION_RMSE, ind_train, ind_test, HAMD_file)
 
 
-HAMD_files = ['HAMD_imputed_survey.csv']#['HAMD_original.csv',
-              # 'HAMD_imputed_linear.csv',
-              # 'HAMD_imputed_survey.csv']
+HAMD_files = ['HAMD_imputed_survey.csv']
+# HAMD_files = ['HAMD_imputed_survey.csv',
+#               'HAMD_original.csv',
+#               'HAMD_imputed_linear.csv']
 
 for HAMD_file in HAMD_files:
     BEST_VALIDATION_RMSE = 1000
