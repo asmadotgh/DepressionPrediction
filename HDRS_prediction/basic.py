@@ -71,13 +71,16 @@ def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
         y_validation = y[validation_inds]
 
         # Train the model using the training sets
-        regr.fit(x_train, y_train)
+        try:
+            regr.fit(x_train, y_train)
 
-        validation_RMSE = np.sqrt(mean_squared_error(y_validation, np.round(regr.predict(x_validation))))
-        train_RMSE = np.sqrt(mean_squared_error(y_train, np.round(regr.predict(x_train))))
+            validation_RMSE = np.sqrt(mean_squared_error(y_validation, np.round(regr.predict(x_validation))))
+            train_RMSE = np.sqrt(mean_squared_error(y_train, np.round(regr.predict(x_train))))
 
-        avg_train_RMSE += train_RMSE
-        avg_validation_RMSE += validation_RMSE
+            avg_train_RMSE += train_RMSE
+            avg_validation_RMSE += validation_RMSE
+        except:
+            print 'not converged'
 
     avg_train_RMSE /= K_FOLD_N
     avg_validation_RMSE /= K_FOLD_N
@@ -262,9 +265,9 @@ def run_prediction(HAMD_file):
 
 
 HAMD_files = ['HAMD_imputed_survey.csv']
-HAMD_files = ['HAMD_original.csv',
-              'HAMD_imputed_linear.csv',
-              'HAMD_imputed_survey.csv']
+# HAMD_files = ['HAMD_imputed_survey.csv',
+#               'HAMD_original.csv',
+#               'HAMD_imputed_linear.csv']
 
 for HAMD_file in HAMD_files:
     BEST_VALIDATION_RMSE = 1000
