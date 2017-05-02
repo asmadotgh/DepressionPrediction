@@ -99,15 +99,15 @@ def predict(x_df, y_df, ttl):
     train_y = np.reshape(np.array(y_df[0:9*N*T]), (9*N, T, -1))
 
     F = np.shape(train_x)[2]
-    S1 = np.shape(train_x)[0]
-    S2 = np.shape(train_x)[1]
+    S1_train = np.shape(train_x)[0]
+    S2_train = np.shape(train_x)[1]
     EPSILON = 0.01
 
     train_x_imp = train_x
     train_y_imp = train_y
     #TODO: impute train
     for f in range(F):
-        noise = np.random.rand(S1, S2)*EPSILON
+        noise = np.random.rand(S1_train, S2_train)*EPSILON
         train_x_tmp = train_x
         train_x_tmp[:,:,f] += noise
         train_x_imp = np.concatenate((train_x_imp, train_x_tmp), axis=0)
@@ -130,13 +130,15 @@ def predict(x_df, y_df, ttl):
 
     vali_x = np.reshape(np.array(x_df[-2*N*T:-N*T]), (N, T, -1))
     vali_y = np.reshape(np.array(y_df[-2*N*T:-N*T]), (N, T, -1))
+    S1_vali = np.shape(vali_x)[0]
+    S2_vali = np.shape(vali_x)[1]
 
     vali_x_imp = vali_x
     vali_y_imp = vali_y
 
     #TODO: impute validation
     for f in range(F):
-        noise = np.random.rand(S1, S2)*EPSILON
+        noise = np.random.rand(S1_vali, S2_vali)*EPSILON
         vali_x_tmp = vali_x
         vali_x_tmp[:,:,f] += noise
         vali_x_imp = np.concatenate((vali_x_imp, vali_x_tmp), axis=0)
