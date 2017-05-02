@@ -4,6 +4,7 @@ data/*
 .idea/.*
 .ipynb_checkpoints/*
 HDRS_imputation/*.txt
+HDRS_imputation/figs
 HDRS_prediction/*.txt
 HDRS_prediction/figs
 HDRS_prediction/figs/*
