@@ -329,7 +329,7 @@ def run_prediction(HAMD_file):
     predict(kernel_pca_sub_x, y, 'KernelPCA_sub')
     predict(truncated_svd_sub_x, y, 'TruncatedSVD_sub')
 
-    plot_prediction(BEST_X, BEST_Y, BEST_TTL, BEST_MDL_NAME, BEST_MDL, BEST_VALIDATION_RMSE, ind_train, ind_test, HAMD_file)
+    # plot_prediction(BEST_X, BEST_Y, BEST_TTL, BEST_MDL_NAME, BEST_MDL, BEST_VALIDATION_RMSE)
 
 
 HAMD_files = ['HAMD_imputed_survey.csv']
