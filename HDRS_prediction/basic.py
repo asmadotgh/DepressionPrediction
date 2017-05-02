@@ -1,6 +1,7 @@
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
 from sklearn import linear_model
+from sklearn import ensemble
 from sklearn import gaussian_process
 import numpy as np
 import pandas as pd
@@ -44,10 +45,16 @@ def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
         regr = linear_model.ElasticNetCV(cv=K_FOLD_N, alphas=REGULARIZATION_ALPHAS)
     elif mdl == 'theil':
         regr = linear_model.TheilSenRegressor(random_state=SEED)
-    elif mdl == 'ransac':
-        regr = linear_model.RANSACRegressor(random_state=SEED, min_samples=0.2)
-    elif mdl == 'huber':
-        regr = linear_model.HuberRegressor(epsilon=2.0)
+    elif 'ransac' in mdl: #ransac_{ms}
+        ms = float(mdl[mdl.find('_')+1:])
+        regr = linear_model.RANSACRegressor(random_state=SEED, min_samples=ms)
+    elif 'huber' in mdl: #huber_e{eps}_a{al}
+        eps = float(mdl[mdl.find('_e')+2:mdl.find('_a')])
+        al = float(mdl[mdl.find('_a')+2:])
+        regr = linear_model.HuberRegressor(epsilon=eps, alpha=al)
+    elif 'rf' in mdl: #rf_{n}
+        n = int(mdl[mdl.find('_')+1:])
+        regr = ensemble.RandomForestRegressor(random_state=SEED, n_estimators=n)
     # elif mdl == 'gp':
     #     regr = gaussian_process.GaussianProcessRegressor(n_restarts_optimizer=N_RESTARTS_OPTIMIZER, random_state=SEED)
 
@@ -104,7 +111,9 @@ def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_te
 
     model_file = open(MODEL_FILE_NAME, "a+")
     model_file.write('\nBest Model: '+mdl_name+', '+ttl+', validation RMSE: %f, test RMSE: %f \n' %(validation_RMSE, test_RMSE))
-    if mdl_name != 'ransac' and mdl_name != 'gp':
+    if mdl_name == 'gp' or 'ransac' in mdl_name or 'rf' in mdl_name:
+        print 'no coefficiants to print for this model.'
+    else:
         print 'model parameters: \n'
         print mdl.coef_
         model_file.write('coefficients:\n')
@@ -216,7 +225,25 @@ def run_prediction(HAMD_file):
     print '\ntest indices:'
     print ind_test
 
-    models = ['regression', 'ridge', 'lasso', 'elasticNet', 'huber']#, 'ransac', 'theil']
+    models = ['regression', 'ridge', 'lasso', 'elasticNet', 'theil']
+
+    # adding ransac models
+    min_samples = [0.1, 0.2, 0.3, 0.4, 0.5]
+    for ms in min_samples:
+        models.append('ransac_'+str(ms))
+
+    # adding huber models
+    epsilons = [1.0, 1.35, 1.5]
+    alphas = [0.0001, 0.001, 0.01, 0.1, 0.5, 1.0, 5.0, 10.0]
+    for eps in epsilons:
+        for al in alphas:
+            models.append('huber_e'+str(eps)+'_a'+str(al))
+
+    #adding rf models
+    n_estimators = [5, 10, 15, 20, 25]
+    for n in n_estimators:
+        models.append('rf_'+str(n))
+
     model_file = open(MODEL_FILE_NAME, "w")
     model_file.close()
     for mdl in models:
