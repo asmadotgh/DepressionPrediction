@@ -33,7 +33,7 @@ N_RESTARTS_OPTIMIZER = 50
 # for dimensionality reduction
 EXPLAINED_VARIANCE_THRESHOLD = 0.85
 
-REGULARIZATION_ALPHAS = [0.1, 0.5, 1.0, 5, 10.0]
+REGULARIZATION_ALPHAS = [0.1, 0.5, 1.0, 5.0, 10.0]
 def get_app_type(app):
     if app in ['air.com.sgn.bookoflife.gp']:
         return 'game'
@@ -74,4 +74,20 @@ def is_imputed(series):
     else:
         series['imputed'] = 'n'
     return series
+
+
+def convert_one_hot_str(df, col):
+    cols = np.unique(df[col])
+    old_col = np.array(df[col])
+    for c in cols:
+        new_col = []
+        for i in old_col:
+            if i == c:
+                new_col.append(1)
+            else:
+                new_col.append(0)
+
+        df[col+'_'+c] = new_col
+
+    return df
 
