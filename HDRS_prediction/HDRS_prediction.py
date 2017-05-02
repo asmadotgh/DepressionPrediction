@@ -227,9 +227,9 @@ def run_prediction(HAMD_file):
 
 
 HAMD_files = ['HAMD_imputed_survey.csv']
-# HAMD_files = ['HAMD_original.csv',
-#               'HAMD_imputed_linear.csv',
-#               'HAMD_imputed_survey.csv']
+HAMD_files = ['HAMD_original.csv',
+              'HAMD_imputed_linear.csv',
+              'HAMD_imputed_survey.csv']
 
 for HAMD_file in HAMD_files:
     BEST_VALIDATION_RMSE = 1000

@@ -200,8 +200,3 @@ for HAMD_file in HAMD_files:
     BEST_MDL_NAME = None
     BEST_MDL = None
     run_prediction(HAMD_file)
-
-
-#TODO smart feature selection
-
-#TODO hieriarchichal bayes
