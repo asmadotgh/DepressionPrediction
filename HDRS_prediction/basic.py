@@ -117,7 +117,15 @@ def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_te
     '_t_'+'{:.3f}'.format(test_RMSE)+'.pdf'
     plt.savefig('figs/'+fig_title, transparent=True, format='pdf', bbox_inches='tight')
 
-    plt.show()
+    plt.figure(figsize=(16, 4))
+    plt.scatter(range(len(ind_test)), np.array(y)[ind_test], label='HDRS', color='green', alpha=0.5)
+    plt.scatter(range(len(ind_test)), np.round(mdl.predict(np.array(x)[ind_test])), label='predicted - test', color='black', alpha=0.5)
+    plt.title('imputation: '+ HAMD_file[0:-4]+', model: '+mdl_name+', dataset: '+ttl +
+              ', validation RMSE: '+'{:.3f}'.format(validation_RMSE)+
+              ', test RMSE: '+'{:.3f}'.format(test_RMSE))
+    plt.ylabel('HDRS')
+    plt.legend(loc=2, scatterpoints=1)
+    plt.savefig('figs/test/'+fig_title, transparent=True, format='pdf', bbox_inches='tight')
 
 
 def run_prediction(HAMD_file):
