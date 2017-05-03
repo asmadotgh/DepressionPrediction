@@ -1,3 +1,6 @@
+#TODO better way:
+# save SE for each point
+
 # for each point, find k nearest neighbours
 # give the output of the model that has the least error on these
 
@@ -30,57 +33,75 @@ def split_data_ind(inds, test_N):
     ind_test = inds[0:test_N]
     return ind_train, ind_test
 
-def predict(all_x, pca_x, y, kernel_pca_x, truncated_svd_x,
-                sub_x, pca_sub_x, kernel_pca_sub_x, truncated_svd_sub_x,
-                sub_x_2, pca_sub_x_2, kernel_pca_sub_x_2, truncated_svd_sub_x_2,
-                y, mdl, ind_train, ind_test, model_file):
+def predict(mdl_xs, inp_y, mdl, ind_train, ind_test, model_file):
 
     global BEST_VALIDATION_RMSE, BEST_X, BEST_Y, BEST_TTL, BEST_MDL_NAME, BEST_MDL
 
-    x = np.array(inp_x)[ind_train]
-    y = np.array(inp_y)[ind_train]
 
-    # Create linear regression object
-    if 'ensemble' in mdl: #ensemble_{x}
-        k = int(mdl[mdl.find('_')+1:])
+    for ind in range(len(ind_train)):
 
-    inds = range(len(y))
-    kf = KFold(n_splits=K_FOLD_N)
-    splits = kf.split(inds)
-    avg_train_RMSE = 0
-    avg_validation_RMSE = 0
+        # x = np.array(inp_x)[ind_train]
+        y = np.array(inp_y)[ind_train]
 
-    for train_inds, validation_inds in splits:
-        x_train = x[train_inds]
-        y_train = y[train_inds]
-        x_validation = x[validation_inds]
-        y_validation = y[validation_inds]
+        # Create linear regression object
+        if 'ensemble' in mdl: #ensemble_{x}
+            k = int(mdl[mdl.find('_')+1:])
 
-        # Train the model using the training sets
-        try:
-            regr.fit(x_train, y_train)
+        inds = range(len(y))
+        kf = KFold(n_splits=K_FOLD_N)
+        splits = kf.split(inds)
 
-            validation_RMSE = np.sqrt(mean_squared_error(y_validation, np.round(regr.predict(x_validation))))
-            train_RMSE = np.sqrt(mean_squared_error(y_train, np.round(regr.predict(x_train))))
+        avg_train_RMSE = 0
+        avg_validation_RMSE = 0
 
-            avg_train_RMSE += train_RMSE
-            avg_validation_RMSE += validation_RMSE
-        except:
-            print 'not converged'
+        for train_inds, validation_inds in splits:
+            for t_i in train_inds:
+                #TODO find index of k nn (in train)
+                knn_i = []
+                for inp_x, regr in mdl_xs:
+                    x = inp_x[train_inds]
+                    point_RMSE = np.sqrt(mean_squared_error(y[knn_i], np.round(regr.predict(x[knn_i]))))
+            for v_i in validation_inds:
+                #TODO find k nn (in train)
+                knn_x = []
+                knn_y = []
 
-    avg_train_RMSE /= K_FOLD_N
-    avg_validation_RMSE /= K_FOLD_N
+            x_train = x[train_inds]
+            y_train = y[train_inds]
+            x_validation = x[validation_inds]
+            y_validation = y[validation_inds]
 
-    if avg_validation_RMSE < BEST_VALIDATION_RMSE:
-        BEST_X = inp_x
-        BEST_Y = inp_y
-        BEST_TTL = ttl
-        BEST_MDL_NAME = mdl
-        BEST_MDL = regr
-        BEST_VALIDATION_RMSE = avg_validation_RMSE
+            for one_x in x_train:
+                #TODO find k nn (in train)
+                knn_x = []
+                knn_y = []
+                mdl_RMSE = np.sqrt(mean_squared_error(knn_y, np.round(regr.predict(knn_x))))
 
-    print mdl+', '+ttl+', train RMSE: %f, validation RMSE: %f ' %(avg_train_RMSE, avg_validation_RMSE)
-    model_file.write(mdl+', '+ttl+', train RMSE: %f, validation RMSE: %f \n' %(avg_train_RMSE, avg_validation_RMSE))
+            # Train the model using the training sets
+            try:
+                regr.fit(x_train, y_train)
+
+                validation_RMSE = np.sqrt(mean_squared_error(y_validation, np.round(regr.predict(x_validation))))
+                train_RMSE = np.sqrt(mean_squared_error(y_train, np.round(regr.predict(x_train))))
+
+                avg_train_RMSE += train_RMSE
+                avg_validation_RMSE += validation_RMSE
+            except:
+                print 'not converged'
+
+        avg_train_RMSE /= K_FOLD_N
+        avg_validation_RMSE /= K_FOLD_N
+
+        if avg_validation_RMSE < BEST_VALIDATION_RMSE:
+            BEST_X = inp_x
+            BEST_Y = inp_y
+            BEST_TTL = ttl
+            BEST_MDL_NAME = mdl
+            BEST_MDL = regr
+            BEST_VALIDATION_RMSE = avg_validation_RMSE
+
+        print mdl+', '+ttl+', train RMSE: %f, validation RMSE: %f ' %(avg_train_RMSE, avg_validation_RMSE)
+        model_file.write(mdl+', '+ttl+', train RMSE: %f, validation RMSE: %f \n' %(avg_train_RMSE, avg_validation_RMSE))
 
 
 def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_test, HAMD_file):
@@ -159,39 +180,7 @@ def run_prediction(HAMD_file):
         if 'sleep' in col: #'daily' in col or
             sub_columns.append(col)
     #sub_x = x_df_nonan[sub_columns]
-    sub_x = x_df_nonan[['call_daily_IncomingDismissed_count_call',
-                        'call_daily_IncomingMissed_count_call',
-                        'call_daily_Incoming_count_call',
-                        'call_daily_Incoming_mean_call_duration',
-                        'call_daily_Incoming_median_call_duration',
-                        'call_daily_Incoming_std_call_duration',
-                        'call_daily_Incoming_sum_call_duration',
-                        'call_daily_Outgoing_count_call',
-                        'call_daily_Outgoing_mean_call_duration',
-                        'call_daily_Outgoing_median_call_duration',
-                        'call_daily_Outgoing_std_call_duration',
-                        'call_daily_Outgoing_sum_call_duration',
-                        'call_daily_incoming_outgoing_call_duration',
-                        'call_daily_incoming_outgoing_call_count',
-                        'display_daily_sum_on_duration',
-                        'display_daily_std_on_duration',
-                        'display_daily_mean_on_duration',
-                        'display_daily_median_on_duration',
-                        'display_daily_count_on',
-                        'location_daily_count',
-                        'location_daily_total_std',
-                        'sleep_24hrs_fraction_recording',
-                        'sleep_24hrs_sleep_(s)',
-                        'sleep_night_sleep_(s)',
-                        'sleep_night_fraction_recording',
-                        'sleep_night_sleep_onset_timeelapsed_since_noon_(s)',
-                        'sleep_night_max_uninterrupted_sleep_(s)',
-                        'sleep_night_nbwakeups',
-                        'sleep_ day_wakeup_onset_timeelapsed_since_midnight_(s)',
-                        'sleep_sleep_reg_index',
-                        'sms_daily_Incoming_count_sms',
-                        'ID_M004', 'ID_M006', 'ID_M008', 'ID_M011', 'ID_M012', 'ID_M013',
-                        'ID_M015', 'ID_M016', 'ID_M017', 'ID_M020', 'ID_M022']]
+    sub_x = x_df_nonan[SUB_FEATURES]
 
 
     reduced_sub_x_df, reduced_sub_n = reduce_dimensionality(sub_x, max_n=25, threshold=EXPLAINED_VARIANCE_THRESHOLD)
@@ -201,8 +190,7 @@ def run_prediction(HAMD_file):
 
     sub_x_prev_day = sub_x.shift(periods=1)
     sub_x_prev_day.iloc[0] = sub_x_prev_day.iloc[1]
-    sub_x_prev_day.drop(['ID_M004', 'ID_M006', 'ID_M008', 'ID_M011', 'ID_M012', 'ID_M013',
-                        'ID_M015', 'ID_M016', 'ID_M017', 'ID_M020', 'ID_M022'], inplace=True, axis=1)
+    sub_x_prev_day.drop(ONE_HOT_USERS, inplace=True, axis=1)
     cols = sub_x_prev_day.columns.values
     sub_x_prev_day.columns = [col+'_hist' for col in cols]
     sub_x_2 = sub_x.join(sub_x_prev_day)
@@ -235,13 +223,14 @@ def run_prediction(HAMD_file):
 
     model_file = open(MODEL_FILE_NAME, "w")
     model_file.close()
+
+    # TODO: train all best models
+    # TODO put the model and input data in a list
+    mdl_xs = []
     for mdl in models:
         model_file = open(MODEL_FILE_NAME, "a+")
 
-        predict(all_x, pca_x, y, kernel_pca_x, truncated_svd_x,
-                sub_x, pca_sub_x, kernel_pca_sub_x, truncated_svd_sub_x,
-                sub_x_2, pca_sub_x_2, kernel_pca_sub_x_2, truncated_svd_sub_x_2,
-                y, mdl, ind_train, ind_test, model_file)
+        predict(mdl_xs, y, mdl, ind_train, ind_test, model_file)
 
         model_file.close()
 
