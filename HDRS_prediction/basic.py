@@ -141,7 +141,7 @@ def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_te
 
 
 def run_prediction(HAMD_file):
-    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'.txt'
+    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_basic.txt'
     all_df = pd.read_csv(data_dir+HAMD_file)
     feature_df = pd.read_csv(feature_dir+'daily_all.csv')
     all_df = all_df.merge(feature_df, on=['ID', 'date'], how='outer')
@@ -228,24 +228,7 @@ def run_prediction(HAMD_file):
     print '\ntest indices:'
     print ind_test
 
-    models = ['regression', 'ridge', 'lasso', 'elasticNet', 'theil']
-
-    # adding ransac models
-    min_samples = [0.1, 0.2, 0.3, 0.4, 0.5]
-    for ms in min_samples:
-        models.append('ransac_'+str(ms))
-
-    # adding huber models
-    epsilons = [1.0, 1.35, 1.5]
-    alphas = [0.0001, 0.001, 0.01, 0.1, 0.5, 1.0, 5.0, 10.0]
-    for eps in epsilons:
-        for al in alphas:
-            models.append('huber_e'+str(eps)+'_a'+str(al))
-
-    #adding rf models
-    n_estimators = [5, 10, 15, 20, 25]
-    for n in n_estimators:
-        models.append('rf_'+str(n))
+    models = ['regression', 'ridge', 'lasso', 'elasticNet']
 
     model_file = open(MODEL_FILE_NAME, "w")
     model_file.close()

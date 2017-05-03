@@ -34,11 +34,29 @@ def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
     x = np.array(inp_x)[ind_train]
     y = np.array(inp_y)[ind_train]
 
-    # Create gp object, it is just named regr but is not related :D
-    if 'gp' in mdl:
-        al = float(mdl[mdl.find('_a')+2:mdl.find('_n')])
-        n = int(mdl[mdl.find('_n')+2:])
-        regr = gaussian_process.GaussianProcessRegressor(random_state=SEED, n_restarts_optimizer=n, alpha=al)
+    # Create linear regression object
+    if mdl == 'regression':
+        regr = linear_model.LinearRegression()
+    elif mdl == 'ridge':
+        regr = linear_model.RidgeCV(cv=K_FOLD_N, alphas=REGULARIZATION_ALPHAS)
+    elif mdl == 'lasso':
+        regr = linear_model.LassoCV(cv=K_FOLD_N, alphas=REGULARIZATION_ALPHAS)
+    elif mdl == 'elasticNet':
+        regr = linear_model.ElasticNetCV(cv=K_FOLD_N, alphas=REGULARIZATION_ALPHAS)
+    elif mdl == 'theil':
+        regr = linear_model.TheilSenRegressor(random_state=SEED)
+    elif 'ransac' in mdl: #ransac_{ms}
+        ms = float(mdl[mdl.find('_')+1:])
+        regr = linear_model.RANSACRegressor(random_state=SEED, min_samples=ms)
+    elif 'huber' in mdl: #huber_e{eps}_a{al}
+        eps = float(mdl[mdl.find('_e')+2:mdl.find('_a')])
+        al = float(mdl[mdl.find('_a')+2:])
+        regr = linear_model.HuberRegressor(epsilon=eps, alpha=al)
+    elif 'rf' in mdl: #rf_{n}
+        n = int(mdl[mdl.find('_')+1:])
+        regr = ensemble.RandomForestRegressor(random_state=SEED, n_estimators=n)
+    # elif mdl == 'gp':
+    #     regr = gaussian_process.GaussianProcessRegressor(n_restarts_optimizer=N_RESTARTS_OPTIMIZER, random_state=SEED)
 
     inds = range(len(y))
     kf = KFold(n_splits=K_FOLD_N)
@@ -123,7 +141,7 @@ def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_te
 
 
 def run_prediction(HAMD_file):
-    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_gp.txt'
+    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_rf.txt'
     all_df = pd.read_csv(data_dir+HAMD_file)
     feature_df = pd.read_csv(feature_dir+'daily_all.csv')
     all_df = all_df.merge(feature_df, on=['ID', 'date'], how='outer')
@@ -212,13 +230,10 @@ def run_prediction(HAMD_file):
 
     models = []
 
-    #adding gp models
-
-    alphas = [1e-10, 1e-8, 1e-6, 0.0001, 0.001, 0.01, 0.1, 0.5, 1.0]
-    n_restart_optimizers = [5, 10, 50, 100]
-    for al in alphas:
-        for n in n_restart_optimizers:
-            models.append('gp_a'+str(al)+'_n'+str(n))
+    #adding rf models
+    n_estimators = [5, 10, 15, 20, 25]
+    for n in n_estimators:
+        models.append('rf_'+str(n))
 
     model_file = open(MODEL_FILE_NAME, "w")
     model_file.close()
