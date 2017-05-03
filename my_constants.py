@@ -11,6 +11,7 @@ survey_dir = data_dir + 'raw_survey/'
 feature_dir = data_dir + 'features/'
 raw_log_dir = data_dir + 'raw_logs/'
 combined_log_dir = data_dir + 'combined_logs/'
+results_dir = 'HDRS_prediction/results/'
 
 ACC_THRESHOLD = 1000 # radius accuracy in meters for location data
 CALL_TYPES = ['Incoming',  'IncomingMissed',  'IncomingDismissed',

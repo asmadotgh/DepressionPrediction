@@ -139,6 +139,9 @@ def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_te
     plt.legend(loc=2, scatterpoints=1)
     plt.savefig('figs/test/'+fig_title, transparent=True, format='pdf', bbox_inches='tight')
 
+    output_df = pd.DataFrame(data=mdl.predict(np.array(x)), columns=[mdl_name+'_'+ttl])
+    output_df.to_csv(results_dir+mdl+'.csv')
+
 
 def run_prediction(HAMD_file):
     MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_rf.txt'
