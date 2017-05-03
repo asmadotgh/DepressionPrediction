@@ -355,15 +355,36 @@ def run_prediction(HAMD_file):
     kernel_pca_sub_x = reduced_sub_x_df[['KernelPCA_'+str(i) for i in range(reduced_sub_n)]]
     truncated_svd_sub_x = reduced_sub_x_df[['TruncatedSVD_'+str(i) for i in range(reduced_sub_n)]]
 
+    sub_x_prev_day = sub_x.shift(periods=1)
+    sub_x_prev_day.iloc[0] = sub_x_prev_day.iloc[1]
+    sub_x_prev_day.drop(['ID_M004', 'ID_M006', 'ID_M008', 'ID_M011', 'ID_M012', 'ID_M013',
+                        'ID_M015', 'ID_M016', 'ID_M017', 'ID_M020', 'ID_M022'], inplace=True, axis=1)
+    cols = sub_x_prev_day.columns.values
+    sub_x_prev_day.columns = [col+'_hist' for col in cols]
+    sub_x_2 = sub_x.join(sub_x_prev_day)
 
-    predict(all_x, y, 'all')
+    reduced_sub_x_2_df, reduced_sub_n_2 = reduce_dimensionality(sub_x_2, max_n=30, threshold=EXPLAINED_VARIANCE_THRESHOLD)
+    pca_sub_x_2 = reduced_sub_x_2_df[['PCA_'+str(i) for i in range(reduced_sub_n_2)]]
+    kernel_pca_sub_x_2 = reduced_sub_x_2_df[['KernelPCA_'+str(i) for i in range(reduced_sub_n_2)]]
+    truncated_svd_sub_x_2 = reduced_sub_x_2_df[['TruncatedSVD_'+str(i) for i in range(reduced_sub_n_2)]]
+
+
+
+    predict(all_x, y, 'all data')
     predict(pca_x, y, 'PCA')
-    predict(kernel_pca_x, y, 'KernelPCA')
-    predict(truncated_svd_x, y, 'TruncatedSVD')
-    predict(sub_x, y, 'sub_data')
-    predict(pca_sub_x, y, 'PCA_sub')
-    predict(kernel_pca_sub_x, y, 'KernelPCA_sub')
-    predict(truncated_svd_sub_x, y, 'TruncatedSVD_sub')
+    predict(kernel_pca_x, y, 'Kernel PCA')
+    predict(truncated_svd_x, y, 'Truncated SVD')
+
+    predict(sub_x, y, 'sub data')
+    predict(pca_sub_x, y, 'PCA sub')
+    predict(kernel_pca_sub_x, y, 'Kernel PCA sub')
+    predict(truncated_svd_sub_x, y, 'Truncated SVD sub')
+
+    predict(sub_x_2, y, 'sub hist data')
+    predict(pca_sub_x_2, y, 'PCA sub hist')
+    predict(kernel_pca_sub_x_2, y, 'Kernel PCA sub hist')
+    predict(truncated_svd_sub_x_2, y, 'Truncated SVD sub hist')
+
 
     # plot_prediction(BEST_X, BEST_Y, BEST_TTL, BEST_MDL_NAME, BEST_MDL, BEST_VALIDATION_RMSE)
 

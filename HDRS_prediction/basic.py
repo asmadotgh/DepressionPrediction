@@ -207,10 +207,24 @@ def run_prediction(HAMD_file):
                         'ID_M004', 'ID_M006', 'ID_M008', 'ID_M011', 'ID_M012', 'ID_M013',
                         'ID_M015', 'ID_M016', 'ID_M017', 'ID_M020', 'ID_M022']]
 
+
     reduced_sub_x_df, reduced_sub_n = reduce_dimensionality(sub_x, max_n=25, threshold=EXPLAINED_VARIANCE_THRESHOLD)
     pca_sub_x = reduced_sub_x_df[['PCA_'+str(i) for i in range(reduced_sub_n)]]
     kernel_pca_sub_x = reduced_sub_x_df[['KernelPCA_'+str(i) for i in range(reduced_sub_n)]]
     truncated_svd_sub_x = reduced_sub_x_df[['TruncatedSVD_'+str(i) for i in range(reduced_sub_n)]]
+
+    sub_x_prev_day = sub_x.shift(periods=1)
+    sub_x_prev_day.iloc[0] = sub_x_prev_day.iloc[1]
+    sub_x_prev_day.drop(['ID_M004', 'ID_M006', 'ID_M008', 'ID_M011', 'ID_M012', 'ID_M013',
+                        'ID_M015', 'ID_M016', 'ID_M017', 'ID_M020', 'ID_M022'], inplace=True, axis=1)
+    cols = sub_x_prev_day.columns.values
+    sub_x_prev_day.columns = [col+'_hist' for col in cols]
+    sub_x_2 = sub_x.join(sub_x_prev_day)
+
+    reduced_sub_x_2_df, reduced_sub_n_2 = reduce_dimensionality(sub_x_2, max_n=30, threshold=EXPLAINED_VARIANCE_THRESHOLD)
+    pca_sub_x_2 = reduced_sub_x_2_df[['PCA_'+str(i) for i in range(reduced_sub_n_2)]]
+    kernel_pca_sub_x_2 = reduced_sub_x_2_df[['KernelPCA_'+str(i) for i in range(reduced_sub_n_2)]]
+    truncated_svd_sub_x_2 = reduced_sub_x_2_df[['TruncatedSVD_'+str(i) for i in range(reduced_sub_n_2)]]
 
 
     inds = range(len(y))
@@ -234,14 +248,22 @@ def run_prediction(HAMD_file):
     model_file.close()
     for mdl in models:
         model_file = open(MODEL_FILE_NAME, "a+")
+
         predict(all_x, y, 'all data', mdl, ind_train, ind_test, model_file)
         predict(pca_x, y, 'PCA', mdl, ind_train, ind_test, model_file)
         predict(kernel_pca_x, y, 'Kernel PCA', mdl, ind_train, ind_test, model_file)
         predict(truncated_svd_x, y, 'Truncated SVD', mdl, ind_train, ind_test, model_file)
+
         predict(sub_x, y, 'sub data', mdl, ind_train, ind_test, model_file)
         predict(pca_sub_x, y, 'PCA sub', mdl, ind_train, ind_test, model_file)
         predict(kernel_pca_sub_x, y, 'Kernel PCA sub', mdl, ind_train, ind_test, model_file)
         predict(truncated_svd_sub_x, y, 'Truncated SVD sub', mdl, ind_train, ind_test, model_file)
+
+        predict(sub_x_2, y, 'sub hist data', mdl, ind_train, ind_test, model_file)
+        predict(pca_sub_x_2, y, 'PCA sub hist', mdl, ind_train, ind_test, model_file)
+        predict(kernel_pca_sub_x_2, y, 'Kernel PCA sub hist', mdl, ind_train, ind_test, model_file)
+        predict(truncated_svd_sub_x_2, y, 'Truncated SVD sub hist', mdl, ind_train, ind_test, model_file)
+
         model_file.close()
 
     plot_prediction(BEST_X, BEST_Y, BEST_TTL, BEST_MDL_NAME, BEST_MDL, BEST_VALIDATION_RMSE, ind_train, ind_test, HAMD_file)
