@@ -98,7 +98,7 @@ def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
 
 
 def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_test, HAMD_file):
-    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'.txt'
+    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_rf.txt'
 
     test_RMSE = np.sqrt(mean_squared_error(np.array(y)[ind_test], np.round(mdl.predict(np.array(x)[ind_test]))))
 
@@ -114,7 +114,7 @@ def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_te
 
     model_file = open(MODEL_FILE_NAME, "a+")
     model_file.write('\nBest Model: '+mdl_name+', '+ttl+', validation RMSE: %f, test RMSE: %f \n' %(validation_RMSE, test_RMSE))
-    if mdl_name == 'gp' or 'ransac' in mdl_name or 'rf' in mdl_name:
+    if 'gp' in mdl_name or 'ransac' in mdl_name or 'rf' in mdl_name:
         print 'no coefficiants to print for this model.'
     else:
         print 'model parameters: \n'
