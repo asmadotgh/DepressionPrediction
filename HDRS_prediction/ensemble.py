@@ -73,7 +73,7 @@ def predict(xs, inp_sr_ys, inp_y, mdl, ind_train, ind_test, model_file):
                         knn_inds = knn_inds_kernel_pca_sub_x
                     elif j == 1 or j == 3:
                         knn_inds = knn_inds_kernel_pca_sub_x_2
-                    elif j == 2:
+                    elif j == 2 or j == 4:
                         knn_inds = knn_inds_sub_x
                     # print knn_inds
                     j_RMSE = np.sqrt(mean_squared_error(y[knn_inds], sr_ys[knn_inds, j]))
@@ -153,7 +153,7 @@ def run_prediction(HAMD_file):
     all_df = convert_one_hot_str(all_df, 'ID')
 
     y_df = all_df[['ID', 'HAMD', 'date', 'imputed']]
-    single_regressors = ['basic', 'robust', 'rf', 'gp']
+    single_regressors = ['basic', 'robust', 'rf', 'gp', 'boosting']
     for sr in single_regressors:
         tmp_y_df = pd.read_csv(results_dir+sr+'.csv', index_col=0)
         y_df = y_df.join(tmp_y_df)
