@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import os
 from my_constants import *
 
-
+#TODO SAVE PREDICTION TO FILE
 np.random.seed(SEED)
 
 BEST_VALIDATION_RMSE = 1000

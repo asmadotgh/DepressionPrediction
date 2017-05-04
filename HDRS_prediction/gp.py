@@ -20,13 +20,6 @@ BEST_MDL_NAME = None
 BEST_MDL = None
 
 
-
-def split_data_ind(inds, test_N):
-    np.random.shuffle(inds)
-    ind_train = inds[test_N:]
-    ind_test = inds[0:test_N]
-    return ind_train, ind_test
-
 def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
 
     global BEST_VALIDATION_RMSE, BEST_X, BEST_Y, BEST_TTL, BEST_MDL_NAME, BEST_MDL
@@ -113,8 +106,8 @@ def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_te
     plt.legend(loc=2, scatterpoints=1)
     plt.savefig('figs/test/'+fig_title, transparent=True, format='pdf', bbox_inches='tight')
 
-    output_df = pd.DataFrame(data=mdl.predict(np.array(x)), columns=[mdl_name+'_'+ttl])
-    output_df.to_csv(results_dir+mdl+'.csv')
+    output_df = pd.DataFrame(data=np.round(mdl.predict(np.array(x))), columns=[mdl_name+'_'+ttl])
+    output_df.to_csv(results_dir+'gp.csv')
 
 
 def run_prediction(HAMD_file):

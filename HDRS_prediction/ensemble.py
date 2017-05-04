@@ -1,145 +1,142 @@
-#TODO better way:
-# save SE for each point
-
-# for each point, find k nearest neighbours
-# give the output of the model that has the least error on these
-
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
-from sklearn import linear_model
-from sklearn import ensemble
-from sklearn import gaussian_process
-import numpy as np
 import pandas as pd
 from my_constants import *
 from dimensionality_reduction import reduce_dimensionality
 from sklearn.model_selection import KFold
-
+from scipy import spatial
 
 np.random.seed(SEED)
 
-BEST_VALIDATION_RMSE = 1000
-BEST_X = None
+BEST_VALIDATION_RMSE = 1000000
 BEST_Y = None
-BEST_TTL = None
+BEST_Y_PREDICTION = None
 BEST_MDL_NAME = None
-BEST_MDL = None
 
 
 
-def split_data_ind(inds, test_N):
-    np.random.shuffle(inds)
-    ind_train = inds[test_N:]
-    ind_test = inds[0:test_N]
-    return ind_train, ind_test
+def get_knn_inds(K, sample, inp_x, train_inds):
+    x = inp_x[train_inds]
+    tree = spatial.KDTree(data=x)
+    tree.data
+    dist, indexes = tree.query(x=sample, k=K, )#(x, k=1, eps=0, p=2, distance_upper_bound=inf)
+    if K==1:
+        return list([indexes])
+    else:
+        return list(indexes)
 
-def predict(mdl_xs, inp_y, mdl, ind_train, ind_test, model_file):
+def predict(xs, inp_sr_ys, inp_y, mdl, ind_train, ind_test, model_file):
 
-    global BEST_VALIDATION_RMSE, BEST_X, BEST_Y, BEST_TTL, BEST_MDL_NAME, BEST_MDL
+    global BEST_VALIDATION_RMSE, BEST_Y, BEST_Y_PREDICTION, BEST_MDL_NAME
+
+    kernel_pca_sub_x = np.array(xs[6])
+    kernel_pca_sub_x_2 = np.array(xs[10])
+    sub_x = np.array(xs[4])
+
+    #order of datasets used: ['kernel PCA sub', 'kernel PCA sub hist', 'sub data', 'kernel PCA sub hist']
+
+    y = np.array(inp_y['HAMD'])[ind_train]
+    sr_ys = inp_sr_ys[ind_train]
+
+    inds = range(len(y))
+    kf = KFold(n_splits=K_FOLD_N)
+    splits = kf.split(inds)
+
+    avg_train_RMSE = 0
+    avg_validation_RMSE = 0
+
+    for train_inds, validation_inds in splits:
+
+        ensemble_y = []
+        for i in range(len(inp_y)):
+            if mdl == 'avg':
+                ensemble_y.append(np.round(np.mean(inp_sr_ys[i])))
+            elif mdl =='median':
+                ensemble_y.append(np.median(inp_sr_ys[i]))
+            elif 'ensemble' in mdl:
+                k = int(mdl[mdl.find('_')+1:])
+                if i in ind_train:
+                    tmp_k = k+1
+                else:
+                    tmp_k = k
+                knn_inds_sub_x = get_knn_inds(tmp_k, sub_x[i], sub_x[ind_train], train_inds)
+                knn_inds_kernel_pca_sub_x = get_knn_inds(tmp_k, kernel_pca_sub_x[i], kernel_pca_sub_x[ind_train], train_inds)
+                knn_inds_kernel_pca_sub_x_2 = get_knn_inds(tmp_k, kernel_pca_sub_x_2[i], kernel_pca_sub_x_2[ind_train], train_inds)
+                if i in ind_train:
+                    knn_inds_sub_x = knn_inds_sub_x[1:]
+                    knn_inds_kernel_pca_sub_x = knn_inds_kernel_pca_sub_x[1:]
+                    knn_inds_kernel_pca_sub_x_2 = knn_inds_kernel_pca_sub_x_2[1:]
+                best_j_RMSE = 1000
+                best_j_ind = None
+                for j in range(np.shape(inp_sr_ys)[1]):
+                    if j == 0:
+                        knn_inds = knn_inds_kernel_pca_sub_x
+                    elif j == 1 or j == 3:
+                        knn_inds = knn_inds_kernel_pca_sub_x_2
+                    elif j == 2:
+                        knn_inds = knn_inds_sub_x
+                    # print knn_inds
+                    j_RMSE = np.sqrt(mean_squared_error(y[knn_inds], sr_ys[knn_inds, j]))
+                    if j_RMSE < best_j_RMSE:
+                        best_j_RMSE = j_RMSE
+                        best_j_ind = j
+                ensemble_y.append(inp_sr_ys[i, best_j_ind])
+                # print 'ind: '+str(best_j_ind) + ', RMSE: '+str(best_j_RMSE)
+
+        ensemble_y = np.array(ensemble_y)
+
+        y_train = y[train_inds]
+        y_validation = y[validation_inds]
+        ensemble_y_train = ensemble_y[train_inds]
+        ensemble_y_validation = ensemble_y[validation_inds]
+
+        validation_RMSE = np.sqrt(mean_squared_error(y_validation, ensemble_y_validation))
+        train_RMSE = np.sqrt(mean_squared_error(y_train, ensemble_y_train))
+
+        avg_train_RMSE += train_RMSE
+        avg_validation_RMSE += validation_RMSE
+
+    avg_train_RMSE /= K_FOLD_N
+    avg_validation_RMSE /= K_FOLD_N
+
+    if avg_validation_RMSE < BEST_VALIDATION_RMSE:
+        BEST_MDL_NAME = mdl
+        BEST_Y = inp_y
+        BEST_Y_PREDICTION = ensemble_y
+        BEST_VALIDATION_RMSE = avg_validation_RMSE
 
 
-    for ind in range(len(ind_train)):
-
-        # x = np.array(inp_x)[ind_train]
-        y = np.array(inp_y)[ind_train]
-
-        # Create linear regression object
-        if 'ensemble' in mdl: #ensemble_{x}
-            k = int(mdl[mdl.find('_')+1:])
-
-        inds = range(len(y))
-        kf = KFold(n_splits=K_FOLD_N)
-        splits = kf.split(inds)
-
-        avg_train_RMSE = 0
-        avg_validation_RMSE = 0
-
-        for train_inds, validation_inds in splits:
-            for t_i in train_inds:
-                #TODO find index of k nn (in train)
-                knn_i = []
-                for inp_x, regr in mdl_xs:
-                    x = inp_x[train_inds]
-                    point_RMSE = np.sqrt(mean_squared_error(y[knn_i], np.round(regr.predict(x[knn_i]))))
-            for v_i in validation_inds:
-                #TODO find k nn (in train)
-                knn_x = []
-                knn_y = []
-
-            x_train = x[train_inds]
-            y_train = y[train_inds]
-            x_validation = x[validation_inds]
-            y_validation = y[validation_inds]
-
-            for one_x in x_train:
-                #TODO find k nn (in train)
-                knn_x = []
-                knn_y = []
-                mdl_RMSE = np.sqrt(mean_squared_error(knn_y, np.round(regr.predict(knn_x))))
-
-            # Train the model using the training sets
-            try:
-                regr.fit(x_train, y_train)
-
-                validation_RMSE = np.sqrt(mean_squared_error(y_validation, np.round(regr.predict(x_validation))))
-                train_RMSE = np.sqrt(mean_squared_error(y_train, np.round(regr.predict(x_train))))
-
-                avg_train_RMSE += train_RMSE
-                avg_validation_RMSE += validation_RMSE
-            except:
-                print 'not converged'
-
-        avg_train_RMSE /= K_FOLD_N
-        avg_validation_RMSE /= K_FOLD_N
-
-        if avg_validation_RMSE < BEST_VALIDATION_RMSE:
-            BEST_X = inp_x
-            BEST_Y = inp_y
-            BEST_TTL = ttl
-            BEST_MDL_NAME = mdl
-            BEST_MDL = regr
-            BEST_VALIDATION_RMSE = avg_validation_RMSE
-
-        print mdl+', '+ttl+', train RMSE: %f, validation RMSE: %f ' %(avg_train_RMSE, avg_validation_RMSE)
-        model_file.write(mdl+', '+ttl+', train RMSE: %f, validation RMSE: %f \n' %(avg_train_RMSE, avg_validation_RMSE))
+    print mdl+', train RMSE: %f, validation RMSE: %f ' %(avg_train_RMSE, avg_validation_RMSE)
+    model_file.write(mdl+', train RMSE: %f, validation RMSE: %f \n' %(avg_train_RMSE, avg_validation_RMSE))
 
 
-def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_test, HAMD_file):
+def plot_prediction(y, y_pred, mdl_name, validation_RMSE, ind_train, ind_test, HAMD_file):
     MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_ensemble.txt'
 
-    test_RMSE = np.sqrt(mean_squared_error(np.array(y)[ind_test], np.round(mdl.predict(np.array(x)[ind_test]))))
+    test_RMSE = np.sqrt(mean_squared_error(np.array(y)[ind_test], y_pred[ind_test]))
 
     plt.figure(figsize=(16, 4))
     plt.scatter(range(len(y)), y, label='HDRS', color='green', alpha=0.5)
-    plt.scatter(ind_train, np.round(mdl.predict(np.array(x)[ind_train])), label='predicted - train', color='red', alpha=0.5)
-    plt.scatter(ind_test, np.round(mdl.predict(np.array(x)[ind_test])), label='predicted - test', color='black', alpha=0.5)
-    plt.title('imputation: '+ HAMD_file[0:-4]+', model: '+mdl_name+', dataset: '+ttl +
+    plt.scatter(ind_train, y_pred[ind_train], label='predicted - train', color='red', alpha=0.5)
+    plt.scatter(ind_test, y_pred[ind_test], label='predicted - test', color='black', alpha=0.5)
+    plt.title('imputation: '+ HAMD_file[0:-4]+', model: '+mdl_name +
               ', validation RMSE: '+'{:.3f}'.format(validation_RMSE)+
               ', test RMSE: '+'{:.3f}'.format(test_RMSE))
     plt.ylabel('HDRS')
     plt.legend(loc=2, scatterpoints=1)
 
     model_file = open(MODEL_FILE_NAME, "a+")
-    model_file.write('\nBest Model: '+mdl_name+', '+ttl+', validation RMSE: %f, test RMSE: %f \n' %(validation_RMSE, test_RMSE))
-    if 'gp' in mdl_name or 'ransac' in mdl_name or 'rf' in mdl_name:
-        print 'no coefficiants to print for this model.'
-    else:
-        print 'model parameters: \n'
-        print mdl.coef_
-        model_file.write('coefficients:\n')
-        for item in mdl.coef_:
-            model_file.write('%s \t' % item)
-        model_file.write('\n')
+    model_file.write('\nBest Model: '+mdl_name+', validation RMSE: %f, test RMSE: %f \n' %(validation_RMSE, test_RMSE))
     model_file.close()
-    fig_title = HAMD_file[0:-4]+'_'+mdl_name+'_'+ttl+\
+    fig_title = HAMD_file[0:-4]+'_'+mdl_name+\
     '_v_'+'{:.3f}'.format(validation_RMSE)+\
     '_t_'+'{:.3f}'.format(test_RMSE)+'.pdf'
     plt.savefig('figs/'+fig_title, transparent=True, format='pdf', bbox_inches='tight')
 
     plt.figure(figsize=(16, 4))
     plt.scatter(range(len(ind_test)), np.array(y)[ind_test], label='HDRS', color='green', alpha=0.5)
-    plt.scatter(range(len(ind_test)), np.round(mdl.predict(np.array(x)[ind_test])), label='predicted - test', color='black', alpha=0.5)
-    plt.title('imputation: '+ HAMD_file[0:-4]+', model: '+mdl_name+', dataset: '+ttl +
+    plt.scatter(range(len(ind_test)), y_pred[ind_test], label='predicted - test', color='black', alpha=0.5)
+    plt.title('imputation: '+ HAMD_file[0:-4]+', model: '+mdl_name+
               ', validation RMSE: '+'{:.3f}'.format(validation_RMSE)+
               ', test RMSE: '+'{:.3f}'.format(test_RMSE))
     plt.ylabel('HDRS')
@@ -156,6 +153,12 @@ def run_prediction(HAMD_file):
     all_df = convert_one_hot_str(all_df, 'ID')
 
     y_df = all_df[['ID', 'HAMD', 'date', 'imputed']]
+    single_regressors = ['basic', 'robust', 'rf', 'gp']
+    for sr in single_regressors:
+        tmp_y_df = pd.read_csv(results_dir+sr+'.csv', index_col=0)
+        y_df = y_df.join(tmp_y_df)
+
+    sr_ys = np.array(y_df.drop(['ID', 'date', 'imputed', 'HAMD'], inplace=False, axis=1))
     x_df = all_df.drop(['ID','HAMD','date', 'imputed'], inplace=False, axis=1)
     x_df_nonan = x_df.fillna(0)
 
@@ -175,11 +178,6 @@ def run_prediction(HAMD_file):
     truncated_svd_x = reduced_x_df[['TruncatedSVD_'+str(i) for i in range(reduced_n)]]
 
     all_columns = x_df_nonan.columns.values
-    sub_columns = []
-    for col in all_columns:
-        if 'sleep' in col: #'daily' in col or
-            sub_columns.append(col)
-    #sub_x = x_df_nonan[sub_columns]
     sub_x = x_df_nonan[SUB_FEATURES]
 
 
@@ -205,7 +203,6 @@ def run_prediction(HAMD_file):
     imputed_inds = y_df[y_df['imputed']=='y'].index
     for i in imputed_inds:
         inds.remove(i)
-    #TODO: do we have enough tests?
     ind_train, ind_test = split_data_ind(inds, int(TEST_RATIO*len(y)))
     ind_train = list(ind_train) + list(imputed_inds)
 
@@ -216,7 +213,9 @@ def run_prediction(HAMD_file):
     print '\ntest indices:'
     print ind_test
 
-    models = []
+
+
+    models = ['avg', 'median']
     ks = [1, 5, 10, 20, 50, 75, 100]
     for k in ks:
         models.append('ensemble_'+str(k))
@@ -224,17 +223,17 @@ def run_prediction(HAMD_file):
     model_file = open(MODEL_FILE_NAME, "w")
     model_file.close()
 
-    # TODO: train all best models
-    # TODO put the model and input data in a list
-    mdl_xs = []
+    xs = [all_x, pca_x, kernel_pca_x, truncated_svd_x,
+          sub_x, pca_sub_x, kernel_pca_sub_x, truncated_svd_sub_x,
+          sub_x_2, pca_sub_x_2, kernel_pca_sub_x_2, truncated_svd_sub_x_2]
     for mdl in models:
         model_file = open(MODEL_FILE_NAME, "a+")
 
-        predict(mdl_xs, y, mdl, ind_train, ind_test, model_file)
+        predict(xs, sr_ys, y, mdl, ind_train, ind_test, model_file)
 
         model_file.close()
 
-    plot_prediction(BEST_X, BEST_Y, BEST_TTL, BEST_MDL_NAME, BEST_MDL, BEST_VALIDATION_RMSE, ind_train, ind_test, HAMD_file)
+    plot_prediction(BEST_Y, BEST_Y_PREDICTION, BEST_MDL_NAME, BEST_VALIDATION_RMSE, ind_train, ind_test, HAMD_file)
 
 
 HAMD_files = ['HAMD_imputed_survey.csv']
@@ -243,17 +242,15 @@ HAMD_files = ['HAMD_imputed_survey.csv']
 #               'HAMD_imputed_linear.csv']
 
 for HAMD_file in HAMD_files:
-    BEST_VALIDATION_RMSE = 1000
-    BEST_X = None
+    BEST_VALIDATION_RMSE = 100000
     BEST_Y = None
-    BEST_TTL = None
+    BEST_Y_PREDICTION = None
     BEST_MDL_NAME = None
-    BEST_MDL = None
     run_prediction(HAMD_file)
 
 
-#TODO: encode missing data?
+#TODO encode missing data?
 
 #TODO hieriarchichal bayes with STAN
 
-#TODO: sensor high dimentional featurs -> NN -> new features
+#TODO sensor high dimentional featurs -> NN -> new features

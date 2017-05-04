@@ -21,12 +21,6 @@ BEST_MDL = None
 
 
 
-def split_data_ind(inds, test_N):
-    np.random.shuffle(inds)
-    ind_train = inds[test_N:]
-    ind_test = inds[0:test_N]
-    return ind_train, ind_test
-
 def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
 
     global BEST_VALIDATION_RMSE, BEST_X, BEST_Y, BEST_TTL, BEST_MDL_NAME, BEST_MDL
@@ -139,8 +133,8 @@ def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_te
     plt.legend(loc=2, scatterpoints=1)
     plt.savefig('figs/test/'+fig_title, transparent=True, format='pdf', bbox_inches='tight')
 
-    output_df = pd.DataFrame(data=mdl.predict(np.array(x)), columns=[mdl_name+'_'+ttl])
-    output_df.to_csv(results_dir+mdl+'.csv')
+    output_df = pd.DataFrame(data=np.round(mdl.predict(np.array(x))), columns=[mdl_name+'_'+ttl])
+    output_df.to_csv(results_dir+'robust.csv')
 
 
 def run_prediction(HAMD_file):
@@ -176,7 +170,7 @@ def run_prediction(HAMD_file):
         if 'sleep' in col: #'daily' in col or
             sub_columns.append(col)
     #sub_x = x_df_nonan[sub_columns]
-    sub_x = x_df_nonan[[SUB_FEATURES]]
+    sub_x = x_df_nonan[SUB_FEATURES]
 
     reduced_sub_x_df, reduced_sub_n = reduce_dimensionality(sub_x, max_n=25, threshold=EXPLAINED_VARIANCE_THRESHOLD)
     pca_sub_x = reduced_sub_x_df[['PCA_'+str(i) for i in range(reduced_sub_n)]]

@@ -1,9 +1,6 @@
 from sklearn.metrics import mean_squared_error
 import matplotlib.pyplot as plt
-from sklearn import linear_model
 from sklearn import ensemble
-from sklearn import gaussian_process
-import numpy as np
 import pandas as pd
 from my_constants import *
 from dimensionality_reduction import reduce_dimensionality
@@ -20,6 +17,7 @@ BEST_MDL_NAME = None
 BEST_MDL = None
 
 
+
 def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
 
     global BEST_VALIDATION_RMSE, BEST_X, BEST_Y, BEST_TTL, BEST_MDL_NAME, BEST_MDL
@@ -28,28 +26,20 @@ def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
     y = np.array(inp_y)[ind_train]
 
     # Create linear regression object
-    if mdl == 'regression':
-        regr = linear_model.LinearRegression()
-    elif mdl == 'ridge':
-        regr = linear_model.RidgeCV(cv=K_FOLD_N, alphas=REGULARIZATION_ALPHAS)
-    elif mdl == 'lasso':
-        regr = linear_model.LassoCV(cv=K_FOLD_N, alphas=REGULARIZATION_ALPHAS)
-    elif mdl == 'elasticNet':
-        regr = linear_model.ElasticNetCV(cv=K_FOLD_N, alphas=REGULARIZATION_ALPHAS)
-    elif mdl == 'theil':
-        regr = linear_model.TheilSenRegressor(random_state=SEED)
-    elif 'ransac' in mdl: #ransac_{ms}
-        ms = float(mdl[mdl.find('_')+1:])
-        regr = linear_model.RANSACRegressor(random_state=SEED, min_samples=ms)
-    elif 'huber' in mdl: #huber_e{eps}_a{al}
-        eps = float(mdl[mdl.find('_e')+2:mdl.find('_a')])
-        al = float(mdl[mdl.find('_a')+2:])
-        regr = linear_model.HuberRegressor(epsilon=eps, alpha=al)
-    elif 'rf' in mdl: #rf_{n}
-        n = int(mdl[mdl.find('_')+1:])
-        regr = ensemble.RandomForestRegressor(random_state=SEED, n_estimators=n)
-    # elif mdl == 'gp':
-    #     regr = gaussian_process.GaussianProcessRegressor(n_restarts_optimizer=N_RESTARTS_OPTIMIZER, random_state=SEED)
+    if mdl == 'adaBoost':
+        regr = ensemble.GradientBoostingRegressor(random_state=SEED)
+    elif mdl=='gb':
+        regr = ensemble.AdaBoostRegressor(random_state=SEED)
+    elif 'adaBoost' in mdl:
+        n = int(mdl[mdl.find('_n')+2:mdl.find('_r')])
+        r = float(mdl[mdl.find('_r')+2:mdl.find('_l')])
+        l = mdl[mdl.find('_l')+2:]
+        regr = ensemble.GradientBoostingRegressor(loss=l, learning_rate=r, n_estimators=n, random_state=SEED)
+    elif 'gb' in mdl:
+        n = int(mdl[mdl.find('_n')+2:mdl.find('_r')])
+        r = float(mdl[mdl.find('_r')+2:mdl.find('_l')])
+        l = mdl[mdl.find('_l')+2:]
+        regr = ensemble.AdaBoostRegressor(n_estimators=n, learning_rate=r, loss=l, random_state=SEED)
 
     inds = range(len(y))
     kf = KFold(n_splits=K_FOLD_N)
@@ -91,7 +81,7 @@ def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
 
 
 def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_test, HAMD_file):
-    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_basic.txt'
+    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_boosting.txt'
 
     test_RMSE = np.sqrt(mean_squared_error(np.array(y)[ind_test], np.round(mdl.predict(np.array(x)[ind_test]))))
 
@@ -107,15 +97,6 @@ def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_te
 
     model_file = open(MODEL_FILE_NAME, "a+")
     model_file.write('\nBest Model: '+mdl_name+', '+ttl+', validation RMSE: %f, test RMSE: %f \n' %(validation_RMSE, test_RMSE))
-    if 'gp' in mdl_name or 'ransac' in mdl_name or 'rf' in mdl_name:
-        print 'no coefficiants to print for this model.'
-    else:
-        print 'model parameters: \n'
-        print mdl.coef_
-        model_file.write('coefficients:\n')
-        for item in mdl.coef_:
-            model_file.write('%s \t' % item)
-        model_file.write('\n')
     model_file.close()
     fig_title = HAMD_file[0:-4]+'_'+mdl_name+'_'+ttl+\
     '_v_'+'{:.3f}'.format(validation_RMSE)+\
@@ -133,11 +114,11 @@ def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_te
     plt.savefig('figs/test/'+fig_title, transparent=True, format='pdf', bbox_inches='tight')
 
     output_df = pd.DataFrame(data=np.round(mdl.predict(np.array(x))), columns=[mdl_name+'_'+ttl])
-    output_df.to_csv(results_dir+'basic.csv')
+    output_df.to_csv(results_dir+'boosting.csv')
 
 
 def run_prediction(HAMD_file):
-    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_basic.txt'
+    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_boosting.txt'
     all_df = pd.read_csv(data_dir+HAMD_file)
     feature_df = pd.read_csv(feature_dir+'daily_all.csv')
     all_df = all_df.merge(feature_df, on=['ID', 'date'], how='outer')
@@ -205,7 +186,25 @@ def run_prediction(HAMD_file):
     print '\ntest indices:'
     print ind_test
 
-    models = ['regression', 'ridge', 'lasso', 'elasticNet']
+    models = ['adaBoost', 'gb']
+    # adding boosting models
+    # n_estimators = [25, 50, 75, 100, 500]
+    # learning_rates = [5.0, 1.0, 0.1, 0.001, 0.0001]
+    # losses = ['linear', 'square']
+    # for n in n_estimators:
+    #     for r in learning_rates:
+    #         for l in losses:
+    #             models.append('adaBoost_n'+str(n)+'_r'+str(r)+'_l'+str(l))
+    #     #AdaBoostRegressor(base_estimator=None, n_estimators=50, learning_rate=1.0, loss='linear', random_state=None)[source]
+    #
+    # n_estimators = [50, 100, 200, 500]
+    # learning_rates = [5.0, 1.0, 0.1, 0.01, 0.001]
+    # losses = ['ls', 'lad', 'huber']
+    # for n in n_estimators:
+    #     for r in learning_rates:
+    #         for l in losses:
+    #             models.append('gb_n'+str(n)+'_r'+str(r)+'_l'+str(l))
+    # #GradientBoostingRegressor(loss='ls', learning_rate=0.1, n_estimators=100, subsample=1.0, criterion='friedman_mse', min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_depth=3, min_impurity_split=1e-07, init=None, random_state=None, max_features=None, alpha=0.9, verbose=0, max_leaf_nodes=None, warm_start=False, presort='auto')[source]
 
     model_file = open(MODEL_FILE_NAME, "w")
     model_file.close()
