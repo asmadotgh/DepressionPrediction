@@ -164,12 +164,12 @@ def run_prediction(HAMD_file):
 
 
     inds = range(len(y))
-    imputed_inds = y_df[y_df['imputed']=='y'].index
-    for i in imputed_inds:
-        inds.remove(i)
-    #TODO: do we have enough tests?
+    # imputed_inds = y_df[y_df['imputed']=='y'].index
+    # for i in imputed_inds:
+    #     inds.remove(i)
+    # ind_train, ind_test = split_data_ind(inds, int(TEST_RATIO*len(y)))
+    # ind_train = list(ind_train) + list(imputed_inds)
     ind_train, ind_test = split_data_ind(inds, int(TEST_RATIO*len(y)))
-    ind_train = list(ind_train) + list(imputed_inds)
 
     print '\n dataset size:'
     print len(y)
