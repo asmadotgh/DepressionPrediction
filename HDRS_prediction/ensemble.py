@@ -220,7 +220,7 @@ def run_prediction(HAMD_file):
 
 
     models = ['avg', 'median']
-    ks = [1, 5, 10, 20, 50, 75, 100]
+    ks = [1, 5, 10, 20, 50, 75]#, 100]
     for k in ks:
         models.append('ensemble_'+str(k))
 

@@ -14,3 +14,7 @@ HDRS_prediction/LSTM
 HDRS_prediction/LSTM/*
 HDRS_prediction/LSTM_no_imputation
 HDRS_prediction/LSTM_no_imputation/*
+HDRS_prediction/legacy results/
+HDRS_prediction/legacy results/*
+HDRS_prediction/results_with_eda_all/
+HDRS_prediction/results_with_eda_all/*
