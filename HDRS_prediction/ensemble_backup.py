@@ -18,7 +18,8 @@ BEST_MDL_NAME = None
 def get_knn_inds(K, sample, inp_x, train_inds):
     x = inp_x[train_inds]
     tree = spatial.KDTree(data=x)
-    dist, indexes = tree.query(x=sample, k=K)#(x, k=1, eps=0, p=2, distance_upper_bound=inf)
+    tree.data
+    dist, indexes = tree.query(x=sample, k=K, )#(x, k=1, eps=0, p=2, distance_upper_bound=inf)
     if K==1:
         return list([indexes])
     else:
@@ -29,12 +30,13 @@ def predict(xs, inp_sr_ys, inp_y, mdl, ind_train, ind_test, model_file):
     global BEST_VALIDATION_RMSE, BEST_Y, BEST_Y_PREDICTION, BEST_MDL_NAME
 
     kernel_pca_sub_x = np.array(xs[6])
-
-    x = kernel_pca_sub_x[:, 0:5]
+    kernel_pca_sub_x_2 = np.array(xs[10])
+    sub_x = np.array(xs[4])
 
     #order of datasets used: ['kernel PCA sub', 'kernel PCA sub hist', 'sub data', 'kernel PCA sub hist']
 
     y = np.array(inp_y['HAMD'])[ind_train]
+    sr_ys = inp_sr_ys[ind_train]
 
     inds = range(len(y))
     kf = KFold(n_splits=K_FOLD_N)
@@ -51,6 +53,35 @@ def predict(xs, inp_sr_ys, inp_y, mdl, ind_train, ind_test, model_file):
                 ensemble_y.append(np.round(np.mean(inp_sr_ys[i])))
             elif mdl =='median':
                 ensemble_y.append(np.median(inp_sr_ys[i]))
+            elif 'ensemble' in mdl:
+                k = int(mdl[mdl.find('_')+1:])
+                if i in ind_train:
+                    tmp_k = k+1
+                else:
+                    tmp_k = k
+                knn_inds_sub_x = get_knn_inds(tmp_k, sub_x[i], sub_x[ind_train], train_inds)
+                knn_inds_kernel_pca_sub_x = get_knn_inds(tmp_k, kernel_pca_sub_x[i], kernel_pca_sub_x[ind_train], train_inds)
+                knn_inds_kernel_pca_sub_x_2 = get_knn_inds(tmp_k, kernel_pca_sub_x_2[i], kernel_pca_sub_x_2[ind_train], train_inds)
+                if i in ind_train:
+                    knn_inds_sub_x = knn_inds_sub_x[1:]
+                    knn_inds_kernel_pca_sub_x = knn_inds_kernel_pca_sub_x[1:]
+                    knn_inds_kernel_pca_sub_x_2 = knn_inds_kernel_pca_sub_x_2[1:]
+                best_j_RMSE = 1000
+                best_j_ind = None
+                for j in range(np.shape(inp_sr_ys)[1]):
+                    if j == 0:
+                        knn_inds = knn_inds_kernel_pca_sub_x
+                    elif j == 1 or j == 3:
+                        knn_inds = knn_inds_kernel_pca_sub_x_2
+                    elif j == 2 or j == 4:
+                        knn_inds = knn_inds_sub_x
+                    # print knn_inds
+                    j_RMSE = np.sqrt(mean_squared_error(y[knn_inds], sr_ys[knn_inds, j]))
+                    if j_RMSE < best_j_RMSE:
+                        best_j_RMSE = j_RMSE
+                        best_j_ind = j
+                ensemble_y.append(inp_sr_ys[i, best_j_ind])
+                # print 'ind: '+str(best_j_ind) + ', RMSE: '+str(best_j_RMSE)
 
         ensemble_y = np.array(ensemble_y)
 
@@ -80,7 +111,7 @@ def predict(xs, inp_sr_ys, inp_y, mdl, ind_train, ind_test, model_file):
 
 
 def plot_prediction(y, y_pred, mdl_name, validation_RMSE, ind_train, ind_test, HAMD_file):
-    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_ensemble2.txt'
+    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_ensemble.txt'
 
     test_RMSE = np.sqrt(mean_squared_error(np.array(y)[ind_test], y_pred[ind_test]))
 
@@ -113,11 +144,11 @@ def plot_prediction(y, y_pred, mdl_name, validation_RMSE, ind_train, ind_test, H
     plt.savefig('figs/test/'+fig_title, transparent=True, format='pdf', bbox_inches='tight')
 
     output_df = pd.DataFrame(data=y_pred, columns=[mdl_name])
-    output_df.to_csv(results_dir+'ensemble2.csv')
+    output_df.to_csv(results_dir+'ensemble.csv')
 
 
 def run_prediction(HAMD_file):
-    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_ensemble2.txt'
+    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_ensemble.txt'
     all_df = pd.read_csv(data_dir+HAMD_file)
     feature_df = pd.read_csv(feature_dir+'daily_all.csv')
     all_df = all_df.merge(feature_df, on=['ID', 'date'], how='outer')
@@ -189,6 +220,9 @@ def run_prediction(HAMD_file):
 
 
     models = ['avg', 'median']
+    ks = [1, 5, 10, 20, 50, 75]#, 100]
+    for k in ks:
+        models.append('ensemble_'+str(k))
 
     model_file = open(MODEL_FILE_NAME, "w")
     model_file.close()

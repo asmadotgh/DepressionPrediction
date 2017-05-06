@@ -45,15 +45,12 @@ def predict(xs, inp_sr_ys, inp_y, mdl, ind_train, ind_test, model_file):
     avg_train_RMSE = 0
     avg_validation_RMSE = 0
 
+    all_ensembles = []
     for train_inds, validation_inds in splits:
 
         ensemble_y = []
         for i in range(len(inp_y)):
-            if mdl == 'avg':
-                ensemble_y.append(np.round(np.mean(inp_sr_ys[i])))
-            elif mdl =='median':
-                ensemble_y.append(np.median(inp_sr_ys[i]))
-            elif 'ensemble' in mdl:
+            if 'ensemble' in mdl:
                 k = int(mdl[mdl.find('_')+1:])
                 if i in ind_train:
                     tmp_k = k+1
@@ -84,6 +81,7 @@ def predict(xs, inp_sr_ys, inp_y, mdl, ind_train, ind_test, model_file):
                 # print 'ind: '+str(best_j_ind) + ', RMSE: '+str(best_j_RMSE)
 
         ensemble_y = np.array(ensemble_y)
+        all_ensembles.append(ensemble_y)
 
         y_train = y[train_inds]
         y_validation = y[validation_inds]
@@ -102,8 +100,29 @@ def predict(xs, inp_sr_ys, inp_y, mdl, ind_train, ind_test, model_file):
     if avg_validation_RMSE < BEST_VALIDATION_RMSE:
         BEST_MDL_NAME = mdl
         BEST_Y = inp_y
-        BEST_Y_PREDICTION = ensemble_y
         BEST_VALIDATION_RMSE = avg_validation_RMSE
+        BEST_Y_PREDICTION = np.mean(np.array(all_ensembles), 0)
+        for i in ind_test:
+            if 'ensemble' in mdl:
+                k = int(mdl[mdl.find('_')+1:])
+                knn_inds_sub_x = get_knn_inds(k, sub_x[i], sub_x[ind_train], train_inds)
+                knn_inds_kernel_pca_sub_x = get_knn_inds(k, kernel_pca_sub_x[i], kernel_pca_sub_x[ind_train], train_inds)
+                knn_inds_kernel_pca_sub_x_2 = get_knn_inds(k, kernel_pca_sub_x_2[i], kernel_pca_sub_x_2[ind_train], train_inds)
+                best_j_RMSE = 1000
+                best_j_ind = None
+                for j in range(np.shape(inp_sr_ys)[1]):
+                    if j == 0:
+                        knn_inds = knn_inds_kernel_pca_sub_x
+                    elif j == 1 or j == 3:
+                        knn_inds = knn_inds_kernel_pca_sub_x_2
+                    elif j == 2 or j == 4:
+                        knn_inds = knn_inds_sub_x
+                    # print knn_inds
+                    j_RMSE = np.sqrt(mean_squared_error(y[knn_inds], sr_ys[knn_inds, j]))
+                    if j_RMSE < best_j_RMSE:
+                        best_j_RMSE = j_RMSE
+                        best_j_ind = j
+                BEST_Y_PREDICTION[i] = inp_sr_ys[i, best_j_ind]
 
 
     print mdl+', train RMSE: %f, validation RMSE: %f ' %(avg_train_RMSE, avg_validation_RMSE)
@@ -219,7 +238,7 @@ def run_prediction(HAMD_file):
 
 
 
-    models = ['avg', 'median']
+    models = []
     ks = [1, 5, 10, 20, 50, 75]#, 100]
     for k in ks:
         models.append('ensemble_'+str(k))

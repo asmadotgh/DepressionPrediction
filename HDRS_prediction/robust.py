@@ -29,15 +29,7 @@ def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
     y = np.array(inp_y)[ind_train]
 
     # Create linear regression object
-    if mdl == 'regression':
-        regr = linear_model.LinearRegression()
-    elif mdl == 'ridge':
-        regr = linear_model.RidgeCV(cv=K_FOLD_N, alphas=REGULARIZATION_ALPHAS)
-    elif mdl == 'lasso':
-        regr = linear_model.LassoCV(cv=K_FOLD_N, alphas=REGULARIZATION_ALPHAS)
-    elif mdl == 'elasticNet':
-        regr = linear_model.ElasticNetCV(cv=K_FOLD_N, alphas=REGULARIZATION_ALPHAS)
-    elif mdl == 'theil':
+    if mdl == 'theil':
         regr = linear_model.TheilSenRegressor(random_state=SEED)
     elif 'ransac' in mdl: #ransac_{ms}
         ms = float(mdl[mdl.find('_')+1:])
@@ -46,12 +38,7 @@ def predict(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
         eps = float(mdl[mdl.find('_e')+2:mdl.find('_a')])
         al = float(mdl[mdl.find('_a')+2:])
         regr = linear_model.HuberRegressor(epsilon=eps, alpha=al)
-    elif 'rf' in mdl: #rf_{n}
-        n = int(mdl[mdl.find('_')+1:])
-        regr = ensemble.RandomForestRegressor(random_state=SEED, n_estimators=n)
-    # elif mdl == 'gp':
-    #     regr = gaussian_process.GaussianProcessRegressor(n_restarts_optimizer=N_RESTARTS_OPTIMIZER, random_state=SEED)
-
+    
     inds = range(len(y))
     kf = KFold(n_splits=K_FOLD_N)
     splits = kf.split(inds)
