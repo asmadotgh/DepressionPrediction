@@ -170,3 +170,7 @@ def split_data_ind(inds, test_N):
     ind_test = inds[0:test_N]
     return IND_TRAIN, IND_TEST
     # return ind_train, ind_test
+
+MAX_PCA_ALL = 25
+MAX_PCA_SUB = 15
+MAX_PCA_SUB_HIST = 20

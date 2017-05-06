@@ -129,7 +129,7 @@ def run_prediction(HAMD_file):
     x_df_nonan = x_df_nonan.drop(x_df_nonan.columns[remove_col], axis=1)
 
 
-    reduced_x_df, reduced_n = reduce_dimensionality(x_df_nonan, max_n=25, threshold=EXPLAINED_VARIANCE_THRESHOLD)
+    reduced_x_df, reduced_n = reduce_dimensionality(x_df_nonan, max_n=MAX_PCA_ALL, threshold=EXPLAINED_VARIANCE_THRESHOLD)
 
     y = y_df[['HAMD']]
     all_x = x_df_nonan
@@ -145,7 +145,7 @@ def run_prediction(HAMD_file):
     #sub_x = x_df_nonan[sub_columns]
     sub_x = x_df_nonan[SUB_FEATURES]
 
-    reduced_sub_x_df, reduced_sub_n = reduce_dimensionality(sub_x, max_n=25, threshold=EXPLAINED_VARIANCE_THRESHOLD)
+    reduced_sub_x_df, reduced_sub_n = reduce_dimensionality(sub_x, max_n=MAX_PCA_SUB, threshold=EXPLAINED_VARIANCE_THRESHOLD)
     pca_sub_x = reduced_sub_x_df[['PCA_'+str(i) for i in range(reduced_sub_n)]]
     kernel_pca_sub_x = reduced_sub_x_df[['KernelPCA_'+str(i) for i in range(reduced_sub_n)]]
     truncated_svd_sub_x = reduced_sub_x_df[['TruncatedSVD_'+str(i) for i in range(reduced_sub_n)]]
@@ -157,7 +157,7 @@ def run_prediction(HAMD_file):
     sub_x_prev_day.columns = [col+'_hist' for col in cols]
     sub_x_2 = sub_x.join(sub_x_prev_day)
 
-    reduced_sub_x_2_df, reduced_sub_n_2 = reduce_dimensionality(sub_x_2, max_n=30, threshold=EXPLAINED_VARIANCE_THRESHOLD)
+    reduced_sub_x_2_df, reduced_sub_n_2 = reduce_dimensionality(sub_x_2, max_n=MAX_PCA_SUB_HIST, threshold=EXPLAINED_VARIANCE_THRESHOLD)
     pca_sub_x_2 = reduced_sub_x_2_df[['PCA_'+str(i) for i in range(reduced_sub_n_2)]]
     kernel_pca_sub_x_2 = reduced_sub_x_2_df[['KernelPCA_'+str(i) for i in range(reduced_sub_n_2)]]
     truncated_svd_sub_x_2 = reduced_sub_x_2_df[['TruncatedSVD_'+str(i) for i in range(reduced_sub_n_2)]]
