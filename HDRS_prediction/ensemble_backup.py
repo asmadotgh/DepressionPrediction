@@ -111,7 +111,7 @@ def predict(xs, inp_sr_ys, inp_y, mdl, ind_train, ind_test, model_file):
 
 
 def plot_prediction(y, y_pred, mdl_name, validation_RMSE, ind_train, ind_test, HAMD_file):
-    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_ensemble.txt'
+    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_ensemble_b.txt'
 
     test_RMSE = np.sqrt(mean_squared_error(np.array(y)[ind_test], y_pred[ind_test]))
 
@@ -144,11 +144,11 @@ def plot_prediction(y, y_pred, mdl_name, validation_RMSE, ind_train, ind_test, H
     plt.savefig('figs/test/'+fig_title, transparent=True, format='pdf', bbox_inches='tight')
 
     output_df = pd.DataFrame(data=y_pred, columns=[mdl_name])
-    output_df.to_csv(results_dir+'ensemble.csv')
+    output_df.to_csv(results_dir+'ensemble_b.csv')
 
 
 def run_prediction(HAMD_file):
-    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_ensemble.txt'
+    MODEL_FILE_NAME = MODEL_FILE[0:-4] + '_' +HAMD_file[0:-4]+'_ensemble_b.txt'
     all_df = pd.read_csv(data_dir+HAMD_file)
     feature_df = pd.read_csv(feature_dir+'daily_all.csv')
     all_df = all_df.merge(feature_df, on=['ID', 'date'], how='outer')
@@ -219,7 +219,7 @@ def run_prediction(HAMD_file):
 
 
 
-    models = ['avg', 'median']
+    models = []
     ks = [1, 5, 10, 20, 50, 75]#, 100]
     for k in ks:
         models.append('ensemble_'+str(k))
