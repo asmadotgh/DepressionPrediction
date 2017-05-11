@@ -3,6 +3,7 @@ from sklearn import linear_model
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import LeaveOneOut
 import matplotlib.pyplot as plt
+from sklearn import ensemble
 import numpy as np
 import pandas as pd
 from my_constants import *
@@ -75,6 +76,13 @@ def impute(inp_x, inp_y, ttl, mdl, ind_train, ind_test, model_file):
         regr = linear_model.RANSACRegressor(random_state=SEED, min_samples=0.2)
     elif mdl == 'huber':
         regr = linear_model.HuberRegressor(epsilon=2.0)
+    elif mdl == 'adaBoost':
+        regr = ensemble.GradientBoostingRegressor(random_state=SEED)
+    elif mdl=='gb':
+        regr = ensemble.AdaBoostRegressor(random_state=SEED)
+    elif 'rf' in mdl: #rf_{n}
+        n = int(mdl[mdl.find('_')+1:])
+        regr = ensemble.RandomForestRegressor(random_state=SEED, n_estimators=n)
 
 
     inds = range(len(y))
@@ -130,7 +138,7 @@ def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_te
 
     model_file = open(MODEL_FILE, "a+")
     model_file.write('\nBest Model: '+mdl_name+', '+ttl+', validation RMSE: %f, test RMSE: %f \n' %(validation_RMSE, test_RMSE))
-    if mdl != 'ransac':
+    if mdl != 'ransac' and mdl != 'gb' and mdl != 'adaBoost' and 'rf' not in mdl:
         print 'model parameters: \n'
         print mdl.coef_
         model_file.write('coefficients:\n')
@@ -224,7 +232,12 @@ print ind_test
 
 # regression, regularized versions, models that are robust to outliers
 # TODO: add hierarchical bayes
-models = ['regression', 'ridge', 'lasso', 'elasticNet', 'huber', 'ransac', 'theil']
+models = ['regression', 'ridge', 'lasso', 'elasticNet', 'huber', 'ransac', 'theil',
+          'adaBoost', 'gb']
+#adding rf models
+n_estimators = [5, 10, 15, 20, 25]
+for n in n_estimators:
+    models.append('rf_'+str(n))
 model_file = open(MODEL_FILE, "w")
 model_file.close()
 for mdl in models:

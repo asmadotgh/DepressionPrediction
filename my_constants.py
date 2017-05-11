@@ -57,6 +57,9 @@ def get_app_type(app):
     if app in ['com.sec.android.app.clockpackage']:
         return 'clock'
 
+
+#game, email, web, calendar, communication, facebook, maps, video streaming, photo, shopping, clock
+
 #intervals used for calculating features in different time bins
 intervals = [[0, 3, '0_to_3'], [3, 6, '3_to_6'], [6, 9, '6_to_9'], [9, 12, '9_to_12'],
              [12, 15, '12_to_15'], [15, 18, '15_to_18'], [18, 21, '18_to_21'],
