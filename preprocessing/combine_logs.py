@@ -63,6 +63,7 @@ def clean(ID):
 
 
 
+
     for fname in os.listdir(raw_log_dir+DIRECTORY2):
         if fname.startswith('.') or fname.startswith('unisens.'):
             continue
@@ -76,6 +77,7 @@ def clean(ID):
         df.to_csv(combined_log_dir+DIRECTORY+fname,index=False,header=None)
     copyfile(raw_log_dir+DIRECTORY1+'unisens.xml', combined_log_dir+DIRECTORY+'unisens.xml')
     print 'cleaned '+ ID+'\n'
+
 
 # UNCOMMENT for cleaning the files
 # for user in NEEDS_CLEANING:

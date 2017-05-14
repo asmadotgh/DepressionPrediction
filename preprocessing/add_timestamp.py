@@ -17,10 +17,10 @@ def add_timestamp():
         if '_' in dname or '-' in dname:
             continue
         info_fname=DIR+dname+'/unisens.xml'
-        tree=ET.parse(info_fname)
+        tree = ET.parse(info_fname)
         root = tree.getroot()
-        timestamp=root.get('timestampStart')
-        timestamp=datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%f')
+        timestamp = root.get('timestampStart')
+        timestamp = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%f')
         def add_date(series):
             series['datetime'] = str(timestamp + dt.timedelta(seconds=series.iloc[0]))
             return series

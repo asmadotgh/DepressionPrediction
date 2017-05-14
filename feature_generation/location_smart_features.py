@@ -4,6 +4,7 @@ import os
 from my_constants import *
 from geopy.distance import great_circle
 
+#TODO: not fully implementd
 #######################        Daily dataset for all users location (smart)      #######################
 
 DIR = combined_log_dir

@@ -169,6 +169,10 @@ daily_df = daily_df.reset_index(drop=True)
 daily_df.to_csv(feature_dir+'daily_survey.csv', index=False)
 
 
+#TODO: remove below when we have HAMD for the two new users
+new_users = ['M029', 'M030']
+for new_user in new_users:
+    daily_df = daily_df[daily_df['ID'] != new_user]
 
 
 #####################################################################################
