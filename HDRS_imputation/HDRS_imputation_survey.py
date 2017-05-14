@@ -138,7 +138,7 @@ def plot_prediction(x, y, ttl, mdl_name, mdl, validation_RMSE, ind_train, ind_te
 
     model_file = open(MODEL_FILE, "a+")
     model_file.write('\nBest Model: '+mdl_name+', '+ttl+', validation RMSE: %f, test RMSE: %f \n' %(validation_RMSE, test_RMSE))
-    if mdl != 'ransac' and mdl != 'gb' and mdl != 'adaBoost' and 'rf' not in mdl:
+    if mdl_name != 'ransac' and mdl_name != 'gb' and mdl_name != 'adaBoost' and 'rf' not in mdl_name:
         print 'model parameters: \n'
         print mdl.coef_
         model_file.write('coefficients:\n')
