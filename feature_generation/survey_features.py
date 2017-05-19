@@ -61,7 +61,7 @@ SPIRITS_ALC = 40.0
 CIDER_ALC = 5.0
 ALC_CONVERTOR = 60.0
 
-COFFEE_CAFFEINE = 16 #doesn't count for spresso :| 70
+COFFEE_CAFFEINE = 16 #doesn't count for espresso :| 70
 TEA_CAFFEINE = 6
 SODA_CAFFEINE = 4
 ENERGY_CAFFEINE = 10
@@ -169,10 +169,10 @@ daily_df = daily_df.reset_index(drop=True)
 daily_df.to_csv(feature_dir+'daily_survey.csv', index=False)
 
 
-#TODO: remove below when we have HAMD for the two new users
-new_users = ['M029', 'M030']
-for new_user in new_users:
-    daily_df = daily_df[daily_df['ID'] != new_user]
+#TODO: remove below when we have HAMD for the new users
+# new_users = ['M029', 'M030', 'M033', 'M034']
+# for new_user in new_users:
+#     daily_df = daily_df[daily_df['ID'] != new_user]
 
 
 #####################################################################################

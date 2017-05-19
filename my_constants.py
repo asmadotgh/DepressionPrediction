@@ -1,7 +1,7 @@
 import numpy as np
 
 HC = ['M001', 'M002', 'M014', 'M021']
-MDD = ['M004', 'M005', 'M006', 'M008', 'M011', 'M012', 'M013', 'M015', 'M016', 'M017', 'M020', 'M022', 'M029', 'M030'] #'M029', 'M030' just added
+MDD = ['M004', 'M005', 'M006', 'M008', 'M011', 'M012', 'M013', 'M015', 'M016', 'M017', 'M020', 'M022', 'M029', 'M030', 'M033', 'M034'] #'M029', 'M030', 'M033', 'M034' just added
 outliers = ['M007', 'M018', 'M023'] #dropped out. any user that needs to be removed. for example is in the HAMD scores but doesn't have data or vice versa
 NO_OUTGOING_SMS = ['M006', 'M008', 'M011', 'M013', 'M014', 'M015', 'M016', 'M018', 'M020']
 NEEDS_CLEANING = ['M007', 'M008', 'M011', 'M015', 'M020', 'M022']

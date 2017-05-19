@@ -15,11 +15,10 @@ DIR = combined_log_dir
 
 def calculate_daily_call(intervals):
 
-    df_all=pd.DataFrame()
+    df_all = pd.DataFrame()
     for dname in os.listdir(DIR):
         if dname.startswith('.') or '-' in dname or '_' in dname:
             continue
-
 
         fname = DIR+dname + '/AppUsage_edited.csv'
         df = pd.read_csv(fname, header=None)
