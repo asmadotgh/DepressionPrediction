@@ -3,8 +3,8 @@
 ## Steps
 ### Preprocessing
 Run combine_logs.py and add_timestamp.py under preprocessing directory. This will do the preprocessing to combine all phone features together.
-### Preprocessing and Feature generation
-Run all the *_features.py (except combine_feature) under feature_generation directory. This will create .csv files for each feature type. Then, run combine_features.py to combine them all and create a total daily dataset.
+### Feature generation
+Run all the *_features.py (except combine_features) under feature_generation directory. This will create .csv files for each feature type. Then, run combine_features.py to combine them all and create a total daily dataset.
 ### Dimensionality reduction of survey features
 Run dimensionality_reduction.py under dimensionality_reduction directory. You can test it using test_dim_reduction.py, but that is not necessary.
 ### Predicting HDRS from a surrogate variable (survey data) and imputing HDRS for increasing the size of the dataset
